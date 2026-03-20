@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="shieldMain" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFC040"/>
+      <stop offset="100%" stop-color="#E08820"/>
+    </linearGradient>
+    <linearGradient id="shieldDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D09030"/>
+      <stop offset="100%" stop-color="#A06818"/>
+    </linearGradient>
+    <linearGradient id="shieldLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD870"/>
+      <stop offset="100%" stop-color="#F0B040"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield body — emoji-style pointed bottom -->
+  <path d="M256 472 C160 400 64 320 64 160 L64 96 L256 40 L448 96 L448 160 C448 320 352 400 256 472Z"
+        fill="url(#shieldMain)" stroke="#A06010" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- Shield inner border highlight -->
+  <path d="M256 452 C168 386 88 312 88 168 L88 116 L256 66 L424 116 L424 168 C424 312 344 386 256 452Z"
+        fill="none" stroke="#FFE090" stroke-width="4" stroke-linejoin="round" opacity="0.6"/>
+
+  <!-- Vertical center bar -->
+  <path d="M236 80 L236 440 Q256 460 276 440 L276 80 Q256 60 236 80Z"
+        fill="url(#shieldDark)" opacity="0.5"/>
+
+  <!-- Horizontal center bar -->
+  <path d="M80 200 L432 200 L432 240 L80 240Z"
+        fill="url(#shieldDark)" opacity="0.4" />
+
+  <!-- Top-left quadrant highlight -->
+  <path d="M256 66 L88 116 L88 168 C88 200 88 200 88 200 L236 200 L236 80 L256 66Z"
+        fill="url(#shieldLight)" opacity="0.35"/>
+
+  <!-- Subtle shine -->
+  <ellipse cx="200" cy="150" rx="80" ry="40" fill="white" opacity="0.15"/>
+</svg>

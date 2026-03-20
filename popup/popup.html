@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spoiler Shield</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup">
+    <div class="header">
+      <img class="logo" src="../icons/icon128.png" alt="Spoiler Shield" width="32" height="32">
+      <div class="title-group">
+        <h1>Spoiler Shield</h1>
+        <span class="version">v3.0</span>
+        <span id="paidBadge" class="paid-badge" style="display:none">✓</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Trial / Tier Banner -->
+    <div id="tierBanner" class="tier-banner" style="display:none">
+      <div class="tier-row">
+        <span id="tierIcon" class="tier-icon"></span>
+        <span id="tierLabel" class="tier-label"></span>
+        <span id="tierDays" class="tier-days"></span>
+      </div>
+      <div id="trialProgress" class="trial-progress" style="display:none">
+        <div id="trialBar" class="trial-bar"></div>
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <div class="toggle-label">
+        <span class="label-text">Protection</span>
+        <span id="statusBadge" class="badge active">Active</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="masterToggle" checked>
+        <span class="track">
+          <span class="thumb"></span>
+        </span>
+      </label>
+    </div>
+
+    <button id="upgradeBtn" class="upgrade-btn" style="display:none">
+      Unlock All Sports &mdash; $4.99
+    </button>
+
+    <button id="keepBtn" class="keep-btn" style="display:none">
+      Keep it forever &mdash; $4.99
+    </button>
+
+    <p class="description" id="description">Sports scores & spoilers are hidden across all websites.</p>
+
+    <p class="shortcut-hint">Toggle: <kbd>Alt</kbd>+<kbd>S</kbd></p>
+  </div>
+
+  <script src="../ExtPay.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

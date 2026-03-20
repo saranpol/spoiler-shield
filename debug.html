@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spoiler Shield Debug</title>
+  <style>
+    body { font-family: monospace; background: #1a1a2e; color: #0f0; padding: 20px; font-size: 14px; }
+    .pass { color: #0f0; }
+    .fail { color: #f00; font-weight: bold; }
+    .warn { color: #ff0; }
+    h1 { color: #fff; }
+    pre { background: #0d0d1a; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    #results div { padding: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1>🛡️ Spoiler Shield — Debug Page</h1>
+  <p>Open this page in Chrome to check if the extension is loaded correctly.</p>
+  <p>Also open <b>Developer Tools (F12) → Console</b> tab to see log messages.</p>
+  <hr>
+  <div id="results">Checking...</div>
+
+  <script>
+    const R = document.getElementById('results');
+    function log(msg, status) {
+      const d = document.createElement('div');
+      d.className = status || '';
+      d.textContent = msg;
+      R.appendChild(d);
+    }
+
+    R.textContent = '';
+
+    // 1. Check if extension attribute is set
+    const hasAttr = document.documentElement.hasAttribute('data-spoiler-shield-active');
+    log(hasAttr ? '✅ preload.js ran (data-spoiler-shield-active found)' : '❌ preload.js did NOT run (no data-spoiler-shield-active)', hasAttr ? 'pass' : 'fail');
+
+    // 2. Check if SpoilerShield global exists
+    const hasGlobal = typeof SpoilerShield !== 'undefined';
+    log(hasGlobal ? '✅ blocker.js loaded (SpoilerShield global found)' : '❌ blocker.js did NOT load (no SpoilerShield global)', hasGlobal ? 'pass' : 'fail');
+
+    // 3. Check chrome.runtime
+    const hasChromeRuntime = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
+    log(hasChromeRuntime ? '✅ chrome.runtime available (extension ID: ' + chrome.runtime.id + ')' : '❌ chrome.runtime NOT available — extension not loaded!', hasChromeRuntime ? 'pass' : 'fail');
+
+    // 4. Check if CSS is injected by looking for computed styles
+    // (This page is not youtube.com so CSS won't be injected here)
+    log('⚠️ Note: CSS only loads on youtube.com — this page tests JS loading only', 'warn');
+
+    // 5. If SpoilerShield exists, test analyze()
+    if (hasGlobal) {
+      (async () => {
+        const ready = await SpoilerShield.init();
+        log(ready ? '✅ SpoilerShield.init() succeeded — keywords loaded!' : '❌ SpoilerShield.init() FAILED — keywords not loaded', ready ? 'pass' : 'fail');
+
+        if (ready) {
+          const tests = [
+            { text: 'Everton 0-1 Man Utd | Extended Highlights', expect: true },
+            { text: 'JAPAN 2-1 NORTH KOREA | Asian Qualifiers', expect: true },
+            { text: 'Liverpool 3-1 Leicester City | Extended Highlights', expect: true },
+            { text: 'ไฮไลท์ พรีเมียร์ลีก ลิเวอร์พูล ถล่ม เลสเตอร์ 3-1', expect: true },
+            { text: 'How to cook Thai food at home', expect: false },
+            { text: 'My Morning Routine 5:30 AM', expect: false },
+            { text: 'React Tutorial Part 2: Components', expect: false },
+          ];
+
+          let pass = 0;
+          for (const t of tests) {
+            const r = SpoilerShield.analyze(t.text);
+            const ok = r.isSports === t.expect;
+            if (ok) pass++;
+            log((ok ? '✅' : '❌') + ' analyze("' + t.text.substring(0, 50) + '...") → ' + (r.isSports ? 'SPORTS' : 'SAFE') + (ok ? '' : ' (EXPECTED: ' + (t.expect ? 'SPORTS' : 'SAFE') + ')'), ok ? 'pass' : 'fail');
+          }
+          log('Detection test: ' + pass + '/' + tests.length + ' passed', pass === tests.length ? 'pass' : 'fail');
+        }
+      })();
+    }
+
+    // 6. Summary
+    if (!hasChromeRuntime) {
+      log('', '');
+      log('🚨 EXTENSION IS NOT LOADED IN CHROME!', 'fail');
+      log('Go to chrome://extensions → Enable Developer mode → Load unpacked → Select the spoiler-shield folder', 'warn');
+    } else if (!hasGlobal) {
+      log('', '');
+      log('🚨 Content scripts not injected! This page may not match the URL pattern.', 'fail');
+      log('The extension only injects on youtube.com — check console on YouTube instead.', 'warn');
+    }
+  </script>
+</body>
+</html>

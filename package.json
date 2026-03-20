@@ -1,0 +1,26 @@
+{
+  "name": "spoiler-shield",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saranpol/spoiler-shield.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/saranpol/spoiler-shield/issues"
+  },
+  "homepage": "https://github.com/saranpol/spoiler-shield#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2"
+  },
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
+}

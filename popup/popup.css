@@ -1,0 +1,287 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 280px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: #111318;
+  color: #e4e4e7;
+  -webkit-font-smoothing: antialiased;
+}
+
+.popup {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---- Header ---- */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.title-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+h1 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #F5F5F5;
+  letter-spacing: -0.01em;
+}
+
+.version {
+  font-size: 11px;
+  font-weight: 500;
+  color: #71717A;
+}
+
+.paid-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #22C55E;
+}
+
+/* ---- Divider ---- */
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ---- Tier Banner ---- */
+.tier-banner {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tier-banner.trial {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.tier-banner.free {
+  background: rgba(113, 113, 122, 0.08);
+  border-color: rgba(113, 113, 122, 0.2);
+}
+
+.tier-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tier-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.tier-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #D4D4D8;
+}
+
+.tier-days {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: #A1A1AA;
+}
+
+.trial .tier-label { color: #F59E0B; }
+.trial .tier-days { color: #FBBF24; }
+
+/* Trial progress bar */
+.trial-progress {
+  margin-top: 8px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.trial-bar {
+  height: 100%;
+  background: #F59E0B;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ---- Toggle Row ---- */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.label-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #D4D4D8;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.badge.active {
+  background: rgba(245, 158, 11, 0.15);
+  color: #F59E0B;
+}
+
+.badge.inactive {
+  background: rgba(113, 113, 122, 0.15);
+  color: #71717A;
+}
+
+/* ---- Switch ---- */
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #3F3F46;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+input:checked + .track {
+  background: #F59E0B;
+}
+
+input:checked + .track .thumb {
+  transform: translateX(20px);
+}
+
+input:focus-visible + .track {
+  outline: 2px solid #F59E0B;
+  outline-offset: 2px;
+}
+
+/* ---- Upgrade Button ---- */
+.upgrade-btn {
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #F59E0B;
+  color: #111318;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.upgrade-btn:hover {
+  background: #D97706;
+}
+
+.upgrade-btn:active {
+  background: #B45309;
+}
+
+/* ---- Keep Forever (trial) ---- */
+.keep-btn {
+  width: 100%;
+  padding: 8px 16px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  background: transparent;
+  color: #F59E0B;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.keep-btn:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.keep-btn:active {
+  background: rgba(245, 158, 11, 0.15);
+}
+
+/* ---- Description ---- */
+.description {
+  font-size: 12px;
+  color: #71717A;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* ---- Shortcut Hint ---- */
+.shortcut-hint {
+  font-size: 11px;
+  color: #52525B;
+  text-align: center;
+}
+
+kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-family: inherit;
+  color: #A1A1AA;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}

@@ -1,0 +1,15 @@
+/*
+ * Spoiler Shield — Preload CSS (document_start)
+ * MINIMAL: only hide hover previews. JS handles all blur/masking.
+ */
+
+/* Hide hover preview overlays for shielded items */
+[data-spoiler-shielded] ytd-moving-thumbnail-renderer,
+[data-spoiler-shielded] ytd-thumbnail #hover-overlays,
+[data-spoiler-shielded] thumbnail-hover-overlay-view-model,
+[data-spoiler-shielded] .ytThumbnailHoverOverlayViewModelHost,
+[data-spoiler-shielded] ytd-video-preview,
+[data-spoiler-shielded] #video-preview,
+[data-spoiler-shielded] yt-touch-feedback-shape {
+  display: none !important;
+}

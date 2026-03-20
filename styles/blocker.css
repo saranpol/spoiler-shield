@@ -1,0 +1,135 @@
+/* Hide page until scan is done — prevents spoiler flash on load */
+html:not([data-ss-ready]) body {
+  opacity: 0 !important;
+}
+
+/* === Blur & Badge Styles === */
+
+.spoiler-shield-blurred {
+  filter: blur(25px) saturate(0) brightness(0.7) !important;
+  transition: none !important;
+  pointer-events: none !important;
+  position: relative !important;
+}
+
+.spoiler-shield-blurred:hover {
+  filter: blur(25px) saturate(0) brightness(0.7) !important;
+}
+
+/* Badge position set by JS using getBoundingClientRect for exact image center */
+
+/* === Kill ALL YouTube hover previews on shielded cards === */
+
+/* 1. Disable ALL pointer events on thumbnails — prevents hover preview entirely */
+/* Users can still click the video TITLE to navigate */
+[data-ss="1"] ytd-thumbnail,
+[data-ss="1"] yt-thumbnail-view-model,
+[data-ss="1"] a#thumbnail,
+[data-ss="1"] ytd-playlist-thumbnail,
+[data-ss="1"] .ytd-thumbnail {
+  pointer-events: none !important;
+}
+
+/* 2. Force-hide the global singleton preview when JS marks it */
+ytd-video-preview[data-ss-hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 3. Hide ALL overlay/preview elements inside shielded cards */
+[data-ss="1"] ytd-moving-thumbnail-renderer,
+[data-ss="1"] #hover-overlays,
+[data-ss="1"] thumbnail-hover-overlay-view-model,
+[data-ss="1"] .ytThumbnailHoverOverlayViewModelHost,
+[data-ss="1"] #video-preview,
+[data-ss="1"] yt-touch-feedback-shape,
+[data-ss="1"] #mouseover-overlay,
+[data-ss="1"] #focus-overlay,
+[data-ss="1"] ytd-thumbnail-overlay-hover-text-renderer,
+[data-ss="1"] .thumbnail-overlay-hover {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 4. Kill inline video previews inside shielded thumbnails */
+[data-ss="1"] ytd-thumbnail video,
+[data-ss="1"] a#thumbnail video,
+[data-ss="1"] yt-thumbnail-view-model video,
+[data-ss="1"] .ytd-thumbnail video {
+  display: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 5. Block hover on entire shielded card thumbnail area */
+[data-ss="1"] #thumbnail,
+[data-ss="1"] .thumbnail {
+  pointer-events: none !important;
+}
+
+/* === Badge: centered on blurred thumbnail, responsive size === */
+
+.spoiler-shield-badge {
+  z-index: 10000 !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  color: #F59E0B !important;
+  font-weight: 700 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  backdrop-filter: blur(4px) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  max-width: 85% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  box-sizing: border-box !important;
+  /* Sizes set by JS via data-ss-size attribute */
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+  border-radius: 5px !important;
+  letter-spacing: 0.3px !important;
+}
+/* Small thumbnails (sidebar, shorts, compact) */
+.spoiler-shield-badge[data-ss-size="sm"] {
+  font-size: 8px !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  letter-spacing: 0 !important;
+}
+/* Large thumbnails (main feed) */
+.spoiler-shield-badge[data-ss-size="lg"] {
+  font-size: 14px !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Never show badge/blur inside the actual video player — EXCEPT end screen cards */
+#movie_player .spoiler-shield-blurred:not(.ytp-ce-covering-image),
+#player .spoiler-shield-blurred:not(.ytp-ce-covering-image),
+ytd-player .spoiler-shield-blurred:not(.ytp-ce-covering-image),
+#player-container .spoiler-shield-blurred:not(.ytp-ce-covering-image) {
+  filter: none !important;
+  pointer-events: auto !important;
+}
+#movie_player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge),
+#player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge),
+ytd-player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge),
+#player-container .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge) {
+  display: none !important;
+}
+
+/* End screen cards: allow blur + badge */
+.ytp-ce-element .spoiler-shield-blurred {
+  filter: blur(25px) saturate(0) brightness(0.7) !important;
+  pointer-events: none !important;
+}
+.ytp-ce-element .spoiler-shield-badge {
+  display: inline !important;
+}
