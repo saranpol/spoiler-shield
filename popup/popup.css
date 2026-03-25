@@ -285,3 +285,25 @@ kbd {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
 }
+
+/* ---- Footer ---- */
+.footer {
+  text-align: center;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dev-credit {
+  font-size: 10px;
+  color: #3F3F46;
+}
+
+.dev-credit a {
+  color: #52525B;
+  text-decoration: none;
+}
+
+.dev-credit a:hover {
+  color: #71717A;
+  text-decoration: underline;
+}

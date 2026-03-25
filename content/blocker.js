@@ -33,7 +33,7 @@
     '\\b(?:knock(?:ed)?\\s*out|eliminat\\w*|relegat\\w*)\\b',
     '\\b(?:clean\\s*sheet|shutout|hat[- ]?trick|brace|assists?)\\b',
     '\\b\\d+\\s*(?:goals?|assists?)\\b',
-    '\\b(?:(?:all\\s+)?three\\s+\\w*\\s*points|one\\s+\\w*\\s*point|no\\s+\\w*\\s*points?|full\\s+\\w*\\s*points)\\b',
+    '\\b(?:(?:all\\s+)?three\\s+\\w*\\s*points|one\\s+\\w*\\s*point|a\\s+point|no\\s+\\w*\\s*points?|full\\s+\\w*\\s*points)\\b',
     '\\b(?:[0-3]\\s+\\w*\\s*points?)\\b',
     // ES
     '\\b(?:victoria|ganar|gan[oó]|perder|perdi[oó]|empate|goleada|derrota|remontada)\\b',
@@ -272,7 +272,7 @@
         return t1 + '🛡️' + t2 + '🛡️';
       });
       // Thai action/result words — too ambiguous globally but safe inside sports containers
-      text = text.replace(/(?:อัด|ทุบ|คว่ำ|สังหาร|ปะทะ|เจอ|ไล่บี้|เร่งเครื่อง|เฉือน|เชือด|ต้อน|เหยียบ|ขยี้|ยำ|บุก|ไล่ถล่ม|ไล่อัด|ไล่ทุบ|ดับ|สอย|จัดหนัก|ฟาด|หยุดไม่อยู่|โหดจัด|สุดโหด|จัดเต็ม)/g, () => { changed = true; return '🛡️'; });
+      text = text.replace(/(?:อัด|ทุบ|คว่ำ|(?<!อ)สังหาร|ปะทะ|เจอ|ไล่บี้|เร่งเครื่อง|เฉือน|เชือด|ต้อน|เหยียบ|ขยี้|(?<!แม่น)ยำ|บุก|ไล่ถล่ม|ไล่อัด|ไล่ทุบ|ดับ|สอย|จัดหนัก|ฟาด|หยุดไม่อยู่|โหดจัด|สุดโหด|จัดเต็ม)/g, () => { changed = true; return '🛡️'; });
       // English hype/sentiment words that reveal outcome
       text = text.replace(/\b(?:HUGE|ANOTHER|MASSIVE|INCREDIBLE|BRILLIANT|STUNNING|PERFECT|DOMINANT|CLINICAL|MASTERCLASS|HEROIC|SUPERB|UNSTOPPABLE|SENSATIONAL)\b/gi, () => { changed = true; return '🛡️'; });
       // Sentiment emojis that reveal outcome (positive/negative)
@@ -393,14 +393,14 @@
   function blurThumbnails(container) {
     if (!container) return;
     const inPlayer = container.closest('#movie_player, #player, ytd-player, #player-container');
-    if (inPlayer && !container.closest('.ytp-endscreen-content, .ytp-ce-element')) return;
+    if (inPlayer && !container.closest('.ytp-endscreen-content, .ytp-ce-element, .ytp-autonav-endscreen-upnext-container, .ytp-autonav-endscreen')) return;
 
     // Find actual <img> elements (NOT wrappers — wrappers can be way bigger than the image)
     container.querySelectorAll('img').forEach(img => {
       if (processed.has(img)) return;
       if (img.width > 0 && img.width < 50) return;
       const imgInPlayer = img.closest('#movie_player, #player, ytd-player');
-      if (img.closest('#avatar, #channel-thumbnail, #author-thumbnail') || (imgInPlayer && !img.closest('.ytp-ce-element'))) return;
+      if (img.closest('#avatar, #channel-thumbnail, #author-thumbnail') || (imgInPlayer && !img.closest('.ytp-ce-element, .ytp-autonav-endscreen-upnext-container, .ytp-autonav-endscreen'))) return;
       processed.add(img);
 
       // Blur the image
@@ -463,6 +463,22 @@
       }
     });
 
+    // 2b. YouTube "Up Next" autoplay endscreen
+    document.querySelectorAll('.ytp-autonav-endscreen-upnext-container, .ytp-autonav-endscreen').forEach(container => {
+      if (container.hasAttribute('data-ss')) return;
+      const title = (container.textContent || '').trim();
+      if (!title || title.length < 3) return;
+      const result = shieldElement(container);
+      if (result) {
+        container.setAttribute('data-ss', '1');
+        container.querySelectorAll('img, .ytp-autonav-endscreen-upnext-thumbnail').forEach(img => {
+          if (processed.has(img)) return;
+          processed.add(img);
+          img.classList.add('spoiler-shield-blurred');
+        });
+      }
+    });
+
     // 3. Scan ALL text elements
     document.querySelectorAll(
       'h1, h2, h3, h4, h5, h6, a, p, span, td, li, ' +
@@ -472,7 +488,7 @@
       if (el.children.length > 5) return;
       // Never touch elements inside the video player — EXCEPT end screen cards
       const inPlayer = el.closest('#movie_player, #player, ytd-player, #player-container');
-      if (inPlayer && !el.closest('.ytp-endscreen-content, .ytp-ce-element')) return;
+      if (inPlayer && !el.closest('.ytp-endscreen-content, .ytp-ce-element, .ytp-autonav-endscreen-upnext-container, .ytp-autonav-endscreen')) return;
 
       const text = (el.textContent || '').trim();
       if (!text || text.length < 3 || text.length > 1000) return;

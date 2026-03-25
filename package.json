@@ -21,6 +21,7 @@
     "@playwright/test": "^1.58.2"
   },
   "dependencies": {
+    "puppeteer": "^24.40.0",
     "sharp": "^0.34.5"
   }
 }

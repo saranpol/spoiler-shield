@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('versionLabel').textContent = 'v' + chrome.runtime.getManifest().version;
   const toggle = document.getElementById('masterToggle');
   const badge = document.getElementById('statusBadge');
   const desc = document.getElementById('description');

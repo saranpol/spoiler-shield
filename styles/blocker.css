@@ -110,18 +110,18 @@ ytd-video-preview[data-ss-hidden] {
   letter-spacing: 0.5px !important;
 }
 
-/* Never show badge/blur inside the actual video player — EXCEPT end screen cards */
-#movie_player .spoiler-shield-blurred:not(.ytp-ce-covering-image),
-#player .spoiler-shield-blurred:not(.ytp-ce-covering-image),
-ytd-player .spoiler-shield-blurred:not(.ytp-ce-covering-image),
-#player-container .spoiler-shield-blurred:not(.ytp-ce-covering-image) {
+/* Never show badge/blur inside the actual video player — EXCEPT end screen cards & Up Next */
+#movie_player .spoiler-shield-blurred:not(.ytp-ce-covering-image):not(.ytp-autonav-endscreen-upnext-container .spoiler-shield-blurred):not(.ytp-autonav-endscreen .spoiler-shield-blurred),
+#player .spoiler-shield-blurred:not(.ytp-ce-covering-image):not(.ytp-autonav-endscreen .spoiler-shield-blurred),
+ytd-player .spoiler-shield-blurred:not(.ytp-ce-covering-image):not(.ytp-autonav-endscreen .spoiler-shield-blurred),
+#player-container .spoiler-shield-blurred:not(.ytp-ce-covering-image):not(.ytp-autonav-endscreen .spoiler-shield-blurred) {
   filter: none !important;
   pointer-events: auto !important;
 }
-#movie_player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge),
-#player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge),
-ytd-player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge),
-#player-container .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge) {
+#movie_player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge):not(.ytp-autonav-endscreen .spoiler-shield-badge),
+#player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge):not(.ytp-autonav-endscreen .spoiler-shield-badge),
+ytd-player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge):not(.ytp-autonav-endscreen .spoiler-shield-badge),
+#player-container .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge):not(.ytp-autonav-endscreen .spoiler-shield-badge) {
   display: none !important;
 }
 
@@ -131,5 +131,16 @@ ytd-player .spoiler-shield-badge:not(.ytp-ce-element .spoiler-shield-badge),
   pointer-events: none !important;
 }
 .ytp-ce-element .spoiler-shield-badge {
+  display: inline !important;
+}
+
+/* Up Next autoplay endscreen: allow blur + badge */
+.ytp-autonav-endscreen .spoiler-shield-blurred,
+.ytp-autonav-endscreen-upnext-container .spoiler-shield-blurred {
+  filter: blur(25px) saturate(0) brightness(0.7) !important;
+  pointer-events: none !important;
+}
+.ytp-autonav-endscreen .spoiler-shield-badge,
+.ytp-autonav-endscreen-upnext-container .spoiler-shield-badge {
   display: inline !important;
 }

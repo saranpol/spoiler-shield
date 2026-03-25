@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  width: 1400px;
+  height: 560px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+.layout {
+  display: flex;
+  align-items: center;
+  gap: 80px;
+  z-index: 1;
+}
+.left {
+  text-align: left;
+}
+.icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+.title {
+  font-size: 42px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.tagline {
+  font-size: 18px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.feature {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 500;
+}
+.feature span {
+  color: #F59E0B;
+  margin-right: 8px;
+}
+.right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.demo-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 24px;
+  border-radius: 12px;
+}
+.demo-label {
+  font-size: 14px;
+  color: rgba(255,255,255,0.4);
+  width: 80px;
+  font-weight: 500;
+}
+.before {
+  font-size: 16px;
+  color: rgba(255,255,255,0.3);
+  text-decoration: line-through;
+  font-weight: 600;
+  width: 180px;
+}
+.arrow {
+  font-size: 16px;
+  color: #F59E0B;
+}
+.after {
+  font-size: 16px;
+  color: #F59E0B;
+  font-weight: 700;
+  background: rgba(245,158,11,0.15);
+  padding: 4px 14px;
+  border-radius: 8px;
+}
+/* Decorative */
+.blur-circle {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.12;
+}
+.blur-circle.a { width: 300px; height: 300px; background: #F59E0B; top: -80px; right: -60px; }
+.blur-circle.b { width: 250px; height: 250px; background: #3B82F6; bottom: -60px; left: -50px; }
+.blur-circle.c { width: 200px; height: 200px; background: #8B5CF6; top: 50%; left: 40%; }
+</style>
+</head>
+<body>
+  <div class="blur-circle a"></div>
+  <div class="blur-circle b"></div>
+  <div class="blur-circle c"></div>
+  <div class="layout">
+    <div class="left">
+      <div class="icon">🛡️</div>
+      <div class="title">Spoiler Shield</div>
+      <div class="tagline">Watch the game on your own time.</div>
+      <div class="features">
+        <div class="feature"><span>✓</span> Auto-detects sports content</div>
+        <div class="feature"><span>✓</span> Blurs thumbnails & scores</div>
+        <div class="feature"><span>✓</span> Works on every website</div>
+        <div class="feature"><span>✓</span> 15+ languages supported</div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="demo-row">
+        <span class="demo-label">Score</span>
+        <span class="before">Man Utd 3 - 1 Villa</span>
+        <span class="arrow">→</span>
+        <span class="after">Man Utd 🛡️ - 🛡️ Villa</span>
+      </div>
+      <div class="demo-row">
+        <span class="demo-label">Result</span>
+        <span class="before">Liverpool wins 2-0</span>
+        <span class="arrow">→</span>
+        <span class="after">Liverpool 🛡️ 🛡️-🛡️</span>
+      </div>
+      <div class="demo-row">
+        <span class="demo-label">Thumbnail</span>
+        <span class="before">Highlights with score</span>
+        <span class="arrow">→</span>
+        <span class="after">🛡️ Spoiler Shield</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

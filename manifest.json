@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Spoiler Shield",
-  "version": "3.0.0",
-  "description": "Hide sports scores and spoilers from every website.",
+  "version": "3.1.0",
+  "description": "Auto-blur sports scores, results & spoiler thumbnails on YouTube, Google & all websites. 15+ languages supported.",
   "permissions": [
     "storage",
     "alarms"
