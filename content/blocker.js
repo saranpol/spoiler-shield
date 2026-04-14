@@ -187,10 +187,26 @@
   tier = stored.tier || 'trial';
   SPORTS = buildSportsRegex(tier);
 
+  // Trial expired → force disabled, extension does nothing
+  if (tier === 'free') enabled = false;
+
   // Toggle listener MUST be registered BEFORE the early return
   // so toggling ON works even if the script started disabled
   chrome.storage.onChanged.addListener((changes) => {
+    if (changes.tier) {
+      tier = changes.tier.newValue;
+      SPORTS = buildSportsRegex(tier);
+      // Trial expired → force disabled
+      if (tier === 'free') {
+        enabled = false;
+        unshieldAll();
+        reveal();
+        return;
+      }
+    }
     if (changes.enabled) {
+      // Block enabling if trial expired
+      if (tier === 'free') return;
       enabled = changes.enabled.newValue;
       if (!enabled) {
         unshieldAll();
@@ -202,10 +218,8 @@
         reveal();
       }
     }
-    if (changes.tier) {
-      tier = changes.tier.newValue;
-      SPORTS = buildSportsRegex(tier);
-      // Re-scan with new patterns
+    if (changes.tier && tier !== 'free') {
+      // Re-scan with new patterns (e.g. upgraded to pro)
       processed = new WeakSet();
       originals.clear();
       document.querySelectorAll('[data-ss]').forEach(el => el.removeAttribute('data-ss'));

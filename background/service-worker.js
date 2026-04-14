@@ -34,8 +34,9 @@ async function computeTier() {
     return 'trial';
   }
 
-  // Trial expired
-  if (localData.tier !== 'free') await chrome.storage.local.set({ tier: 'free' });
+  // Trial expired — force disable protection
+  if (localData.tier !== 'free') await chrome.storage.local.set({ tier: 'free', enabled: false });
+  else await chrome.storage.local.set({ enabled: false });
   return 'free';
 }
 

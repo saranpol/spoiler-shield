@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   function updateUI() {
     // Toggle state
     toggle.checked = enabled;
+    toggle.disabled = false;
     badge.textContent = enabled ? 'Active' : 'Off';
     badge.className = 'badge ' + (enabled ? 'active' : 'inactive');
 
@@ -62,20 +63,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? 'All sports protected. Free for ' + days + ' more days.'
         : 'Protection is disabled. Spoilers may be visible.';
     } else {
-      // Trial expired — limited to football
+      // Trial expired — fully disabled, must pay to use
       tierBanner.style.display = 'block';
       tierBanner.className = 'tier-banner free';
       tierIcon.textContent = '\u{1F512}';
       tierLabel.textContent = 'Trial Ended';
-      tierDays.textContent = 'Football Only';
+      tierDays.textContent = 'Upgrade to continue';
       upgradeBtn.style.display = 'block';
-      desc.textContent = enabled
-        ? 'Football scores hidden. Unlock all sports for $4.99.'
-        : 'Protection is disabled. Spoilers may be visible.';
+      // Force toggle off and disable it
+      toggle.checked = false;
+      toggle.disabled = true;
+      badge.textContent = 'Off';
+      badge.className = 'badge inactive';
+      desc.textContent = 'Your free trial has ended. Upgrade to keep your sports spoiler-free.';
     }
   }
 
   toggle.addEventListener('change', () => {
+    // Block enabling if trial expired
+    if (tier === 'free' && toggle.checked) {
+      toggle.checked = false;
+      const extpay = ExtPay('spoiler-shield');
+      extpay.openPaymentPage();
+      return;
+    }
     enabled = toggle.checked;
     chrome.storage.local.set({ enabled });
     updateUI();

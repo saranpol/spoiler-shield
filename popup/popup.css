@@ -95,6 +95,7 @@ h1 {
   font-size: 13px;
   font-weight: 600;
   color: #D4D4D8;
+  white-space: nowrap;
 }
 
 .tier-days {
@@ -102,6 +103,7 @@ h1 {
   font-size: 11px;
   font-weight: 500;
   color: #A1A1AA;
+  white-space: nowrap;
 }
 
 .trial .tier-label { color: #F59E0B; }
