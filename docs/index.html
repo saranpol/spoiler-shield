@@ -1,0 +1,1792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spoiler Shield — Hide Sports Scores on Every Website</title>
+<meta name="description" content="Watch the game on your own time. Spoiler Shield blurs sports scores, results, and spoiler thumbnails across every website. 15+ languages. $4.99 one-time, no subscription.">
+
+<meta property="og:title" content="Spoiler Shield — Hide Sports Scores on Every Website">
+<meta property="og:description" content="Watch the game on your own time. Spoiler-free.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://spoilershield.com">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" type="image/png" href="../icons/icon128.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&family=Special+Elite&display=swap" rel="stylesheet">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Spoiler Shield",
+  "applicationCategory": "BrowserApplication",
+  "operatingSystem": "Chrome",
+  "offers": {
+    "@type": "Offer",
+    "price": "4.99",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+
+<style>
+:root {
+  --paper: #0f0e0c;
+  --paper-2: #1a1815;
+  --ink: #ece3cb;
+  --ink-dim: #9a9078;
+  --ink-faint: #504836;
+  --stamp: #e63946;
+  --caution: #ffb700;
+  --line: rgba(236, 227, 203, 0.12);
+  --line-strong: rgba(236, 227, 203, 0.28);
+  --redact: #0a0a09;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+/* Subtle grain texture — small, tiled, low opacity so content stays legible */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* Typography */
+.display {
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.typewriter {
+  font-family: 'Special Elite', serif;
+  letter-spacing: 0.02em;
+}
+
+.meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.meta-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* Layout primitives */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+.rule {
+  height: 1px;
+  background: var(--line);
+}
+
+.rule-strong {
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.dotted-rule {
+  border-top: 1px dashed var(--line-strong);
+  height: 1px;
+}
+
+/* Redaction bar — the hero motif */
+.redact {
+  display: inline-block;
+  position: relative;
+  background: var(--redact);
+  color: var(--redact);
+  padding: 0 0.3em;
+  margin: 0 0.05em;
+  border-radius: 2px;
+  user-select: none;
+  transition: all 0.4s cubic-bezier(0.3, 0, 0, 1);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.redact::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  border-radius: 2px;
+}
+
+.redact:hover {
+  color: var(--ink);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--stamp);
+}
+.redact:hover::before { opacity: 0; }
+
+/* Stamp */
+.stamp {
+  display: inline-block;
+  color: var(--stamp);
+  border: 3px solid var(--stamp);
+  padding: 6px 14px;
+  font-family: 'Special Elite', serif;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transform: rotate(-4deg);
+  opacity: 0.92;
+  position: relative;
+}
+.stamp::before, .stamp::after {
+  content: '';
+  position: absolute;
+  background: var(--paper);
+  opacity: 0.6;
+}
+.stamp::before {
+  top: 20%; left: -2px; right: -2px; height: 1px;
+  transform: rotate(1.5deg);
+}
+.stamp::after {
+  bottom: 30%; left: -2px; right: -2px; height: 1px;
+  transform: rotate(-0.8deg);
+}
+
+/* Top bar ticker */
+.topbar {
+  background: var(--stamp);
+  color: var(--paper);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+.ticker {
+  display: flex;
+  gap: 48px;
+  animation: scroll-ticker 40s linear infinite;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+@keyframes scroll-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.ticker span { flex-shrink: 0; }
+.ticker .bullet {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--paper);
+  border-radius: 50%;
+  margin: 0 24px;
+  vertical-align: middle;
+  animation: blink 1.4s ease-in-out infinite;
+}
+@keyframes blink { 50% { opacity: 0.2; } }
+
+/* Nav */
+nav {
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  background: rgba(15, 14, 12, 0.92);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.logo-mark {
+  width: 28px; height: 28px;
+  border: 2px solid var(--ink);
+  display: grid; place-items: center;
+  position: relative;
+}
+.logo-mark::before {
+  content: '';
+  width: 10px; height: 12px;
+  background: var(--ink);
+  clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
+}
+.logo-text {
+  font-family: 'Anton', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-dim);
+}
+.nav-dot {
+  width: 8px; height: 8px;
+  background: #3dd68c;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(61, 214, 140, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(61, 214, 140, 0.2); }
+  50% { box-shadow: 0 0 0 6px rgba(61, 214, 140, 0.05); }
+}
+
+/* Buttons */
+.btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  padding: 14px 24px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+  position: relative;
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn-primary:hover {
+  background: var(--stamp);
+  color: var(--ink);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-dim);
+  border: 1px solid var(--line-strong);
+}
+.btn-ghost:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.btn-arrow { transition: transform 0.2s ease; }
+.btn:hover .btn-arrow { transform: translateX(4px); }
+
+/* Hero */
+.hero {
+  padding: 80px 0 120px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-filebar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  margin-bottom: 60px;
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.hero-filebar > div {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.filebar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.filebar-item strong {
+  font-family: 'Special Elite', serif;
+  font-size: 14px;
+  color: var(--ink);
+  letter-spacing: 0.05em;
+  font-weight: 400;
+}
+
+.hero-layout {
+  display: grid;
+  grid-template-columns: 1fr 520px;
+  gap: 64px;
+  align-items: start;
+}
+
+.hero-headline {
+  font-size: clamp(64px, 10vw, 148px);
+  letter-spacing: -0.025em;
+}
+.hero-headline > span {
+  display: block;
+}
+.hero-headline .line-1 { color: var(--ink); }
+.hero-headline .line-2 { color: var(--ink); }
+.hero-headline .line-3 {
+  color: var(--ink-dim);
+  font-style: normal;
+}
+
+.hero-redact-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+.hero-redact {
+  display: inline-block;
+  background: var(--redact);
+  padding: 0 0.2em;
+  position: relative;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,0.4),
+    0 2px 0 rgba(0,0,0,0.5);
+  color: transparent;
+  user-select: none;
+  border-radius: 3px;
+  font-weight: 700;
+}
+.hero-redact::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.2'/%3E%3C/svg%3E");
+  border-radius: 3px;
+  opacity: 0.5;
+}
+
+.hero-sub {
+  margin-top: 40px;
+  max-width: 520px;
+  color: var(--ink-dim);
+  font-size: 15px;
+  line-height: 1.7;
+}
+.hero-sub strong { color: var(--ink); font-weight: 500; }
+
+.hero-cta {
+  margin-top: 48px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.hero-trust {
+  margin-top: 36px;
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+.trust-stat .num {
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  display: block;
+}
+.trust-stat .label {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 6px;
+  display: block;
+}
+
+/* Hero demo — mock YouTube grid with redaction */
+.hero-demo {
+  position: relative;
+  padding-top: 20px;
+}
+.demo-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.demo-label .meta-label { color: var(--ink-dim); }
+
+.demo-frame {
+  position: relative;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-2);
+  padding: 0;
+}
+.demo-frame::before {
+  content: '';
+  position: absolute;
+  top: -1px; right: -1px; bottom: -1px; left: -1px;
+  border: 1px solid rgba(230, 57, 70, 0.3);
+  transform: translate(6px, 6px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.demo-browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(236, 227, 203, 0.03);
+}
+.demo-browser-bar .dots {
+  display: flex;
+  gap: 6px;
+}
+.demo-browser-bar .dots span {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+}
+.demo-url {
+  flex: 1;
+  font-size: 10px;
+  color: var(--ink-faint);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+.demo-shield-badge {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #3dd68c;
+  padding: 3px 8px;
+  border: 1px solid rgba(61, 214, 140, 0.4);
+  border-radius: 3px;
+}
+
+.demo-grid {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.video-card {
+  border: 1px solid var(--line);
+  padding: 0;
+  transition: border-color 0.2s;
+}
+.video-card:hover { border-color: var(--line-strong); }
+.video-thumb {
+  position: relative;
+  aspect-ratio: 16/9;
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.thumb-content {
+  color: var(--ink-dim);
+  font-size: 10px;
+  text-align: center;
+  padding: 8px;
+}
+.thumb-content .score {
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  display: block;
+}
+.thumb-redact {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 10, 9, 0.5);
+  display: grid;
+  place-items: center;
+  transition: opacity 0.3s;
+}
+.thumb-redact::after {
+  content: '⧫';
+  font-size: 24px;
+  color: var(--stamp);
+  opacity: 0.8;
+}
+.video-card:hover .thumb-redact { opacity: 0; }
+
+.video-meta {
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+}
+.video-title {
+  font-size: 11px;
+  color: var(--ink);
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.video-title .r {
+  background: var(--redact);
+  color: transparent;
+  padding: 0 4px;
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.4);
+}
+.video-sub {
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+}
+
+/* Stamp absolute in hero */
+.hero-stamp {
+  position: absolute;
+  top: 120px;
+  right: 40px;
+  z-index: 2;
+  animation: stamp-in 0.6s cubic-bezier(0.2, 1.5, 0.4, 1) 0.3s both;
+}
+@keyframes stamp-in {
+  0% { transform: scale(2) rotate(-4deg); opacity: 0; }
+  100% { transform: scale(1) rotate(-4deg); opacity: 0.92; }
+}
+
+/* Leak map section */
+.leaks {
+  padding: 120px 0;
+  border-top: 1px solid var(--line);
+  position: relative;
+}
+.section-head {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 48px;
+  align-items: end;
+  margin-bottom: 72px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--line);
+}
+.section-no {
+  font-family: 'Anton', sans-serif;
+  font-size: 64px;
+  color: var(--ink-faint);
+  line-height: 0.9;
+}
+.section-title {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(36px, 5vw, 72px);
+  text-transform: uppercase;
+  letter-spacing: -0.015em;
+  line-height: 0.95;
+  color: var(--ink);
+}
+.section-intro {
+  margin-top: 16px;
+  color: var(--ink-dim);
+  font-size: 14px;
+  max-width: 560px;
+}
+
+.leaks-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line-strong);
+  border: 1px solid var(--line-strong);
+}
+.leak {
+  background: var(--paper);
+  padding: 28px 24px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: background 0.2s;
+}
+.leak:hover { background: var(--paper-2); }
+.leak-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.leak-no {
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: 0.15em;
+}
+.leak-severity {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border: 1px solid currentColor;
+}
+.sev-high { color: var(--stamp); }
+.sev-med { color: var(--caution); }
+.sev-low { color: #3dd68c; }
+
+.leak-name {
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-top: 20px;
+}
+.leak-desc {
+  font-size: 12px;
+  color: var(--ink-dim);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Protocol — how it works */
+.protocol {
+  padding: 120px 0;
+  border-top: 1px solid var(--line);
+  background: var(--paper-2);
+  position: relative;
+}
+.protocol::before {
+  content: 'CONFIDENTIAL';
+  position: absolute;
+  top: 40px; right: 40px;
+  font-family: 'Special Elite', serif;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  color: var(--stamp);
+  opacity: 0.6;
+}
+
+.protocol-steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px;
+}
+.step {
+  padding: 40px 32px;
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  position: relative;
+}
+.step-num {
+  font-family: 'Anton', sans-serif;
+  font-size: 96px;
+  line-height: 1;
+  color: var(--ink-faint);
+  margin-bottom: 16px;
+}
+.step-tag {
+  font-family: 'Special Elite', serif;
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  margin-bottom: 12px;
+}
+.step-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.01em;
+  margin-bottom: 14px;
+  color: var(--ink);
+}
+.step-body {
+  font-size: 13px;
+  color: var(--ink-dim);
+  line-height: 1.7;
+}
+.step-connector {
+  position: absolute;
+  top: 50%;
+  right: -30px;
+  transform: translateY(-50%);
+  color: var(--stamp);
+  font-family: 'Anton', sans-serif;
+  font-size: 24px;
+  z-index: 2;
+}
+.step:last-child .step-connector { display: none; }
+
+/* Field capabilities */
+.features {
+  padding: 120px 0;
+  border-top: 1px solid var(--line);
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.feature {
+  background: var(--paper);
+  padding: 32px 28px;
+  position: relative;
+  transition: background 0.2s;
+}
+.feature:hover { background: var(--paper-2); }
+.feature-tag {
+  display: inline-block;
+  font-family: 'Special Elite', serif;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: var(--ink-faint);
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line-strong);
+  margin-bottom: 24px;
+  width: 100%;
+}
+.feature-icon {
+  font-family: 'Anton', sans-serif;
+  font-size: 40px;
+  color: var(--stamp);
+  line-height: 1;
+  margin-bottom: 16px;
+}
+.feature-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 26px;
+  margin-bottom: 10px;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+.feature-body {
+  font-size: 12px;
+  color: var(--ink-dim);
+  line-height: 1.7;
+}
+
+/* Pricing — styled as a receipt/form */
+.pricing {
+  padding: 120px 0;
+  border-top: 1px solid var(--line);
+  background:
+    linear-gradient(var(--paper), var(--paper)),
+    repeating-linear-gradient(0deg, transparent 0, transparent 39px, var(--line) 39px, var(--line) 40px);
+  position: relative;
+}
+
+.receipt {
+  max-width: 640px;
+  margin: 0 auto;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 48px 48px 40px;
+  position: relative;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.6),
+    30px 30px 0 -1px var(--paper-2),
+    30px 30px 0 0 var(--line-strong);
+}
+.receipt::before, .receipt::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 16px;
+  background: radial-gradient(circle at 8px 0, transparent 8px, var(--ink) 8px) 0 0 / 16px 16px;
+}
+.receipt::before { top: -16px; transform: scaleY(-1); }
+.receipt::after { bottom: -16px; }
+
+.receipt-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 2px dashed var(--paper);
+  margin-bottom: 24px;
+}
+.receipt-title {
+  font-family: 'Anton', sans-serif;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.receipt-ref {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--paper);
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  border-bottom: 1px dotted rgba(15, 14, 12, 0.3);
+}
+.receipt-row.total {
+  margin-top: 16px;
+  padding-top: 20px;
+  border-top: 2px solid var(--paper);
+  border-bottom: none;
+  font-family: 'Anton', sans-serif;
+  font-size: 28px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.receipt-row .strike {
+  text-decoration: line-through;
+  opacity: 0.4;
+  margin-right: 8px;
+}
+.receipt-foot {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.receipt-cta {
+  margin-top: 32px;
+  text-align: center;
+}
+.receipt-cta .btn {
+  padding: 18px 32px;
+  font-size: 13px;
+  background: var(--stamp);
+  color: var(--ink);
+}
+.receipt-cta .btn:hover {
+  background: var(--paper);
+  color: var(--ink);
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--stamp);
+}
+
+.pricing-stamp {
+  position: absolute;
+  top: 80px;
+  right: calc(50% - 380px);
+  z-index: 5;
+}
+
+/* FAQ — interrogation transcript */
+.interrogation {
+  padding: 120px 0;
+  border-top: 1px solid var(--line);
+}
+
+.qa-list {
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--line);
+  border: 1px solid var(--line);
+}
+.qa {
+  background: var(--paper);
+}
+.qa-q {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+  user-select: none;
+}
+.qa-q:hover { background: var(--paper-2); }
+.qa-mark {
+  font-family: 'Special Elite', serif;
+  font-size: 14px;
+  color: var(--stamp);
+  letter-spacing: 0.1em;
+  min-width: 48px;
+  flex-shrink: 0;
+}
+.qa-q-text {
+  flex: 1;
+  font-size: 15px;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+.qa-toggle {
+  color: var(--ink-dim);
+  font-size: 20px;
+  transition: transform 0.25s;
+  flex-shrink: 0;
+}
+.qa[open] .qa-toggle { transform: rotate(45deg); }
+.qa-a {
+  padding: 0 28px 28px 96px;
+  font-size: 13px;
+  color: var(--ink-dim);
+  line-height: 1.8;
+}
+.qa-a a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Final CTA */
+.final-cta {
+  padding: 140px 0 160px;
+  border-top: 1px solid var(--line);
+  text-align: center;
+  position: relative;
+}
+.final-cta::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 60px;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 40px;
+  background: var(--line-strong);
+}
+.final-headline {
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(56px, 9vw, 128px);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  margin-bottom: 32px;
+  color: var(--ink);
+}
+.final-headline em {
+  font-style: normal;
+  color: var(--stamp);
+}
+.final-sub {
+  color: var(--ink-dim);
+  max-width: 520px;
+  margin: 0 auto 48px;
+  font-size: 14px;
+}
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--line-strong);
+  padding: 48px 0 32px;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 40px;
+}
+.footer-col h4 {
+  font-family: 'Special Elite', serif;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: var(--ink-dim);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+.footer-col a {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+  padding: 4px 0;
+  font-size: 12px;
+  transition: color 0.15s;
+}
+.footer-col a:hover { color: var(--stamp); }
+.footer-doc {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--ink-faint);
+  line-height: 1.8;
+}
+.footer-meta {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 24px;
+  border-top: 1px dashed var(--line);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* Entrance animations */
+.fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 960px) {
+  .hero-layout { grid-template-columns: 1fr; gap: 48px; }
+  .hero-demo { max-width: 520px; }
+  .hero-stamp { top: 80px; right: 24px; }
+  .leaks-grid { grid-template-columns: repeat(2, 1fr); }
+  .protocol-steps { grid-template-columns: 1fr; }
+  .step-connector { display: none !important; }
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .section-head { grid-template-columns: 1fr; gap: 16px; }
+  .pricing-stamp { right: 24px; top: 40px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .qa-a { padding-left: 28px; }
+  .receipt { padding: 32px 24px; box-shadow: 0 0 0 1px rgba(0,0,0,0.6); }
+}
+@media (max-width: 560px) {
+  .container { padding: 0 20px; }
+  .hero { padding: 40px 0 80px; }
+  .leaks, .protocol, .features, .pricing, .interrogation { padding: 72px 0; }
+  .leaks-grid { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr; }
+  .hero-cta .btn { padding: 14px 20px; font-size: 11px; }
+  .demo-grid { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  .nav-status { display: none; }
+  .hero-filebar > div { gap: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top alert ticker -->
+<div class="topbar">
+  <div class="ticker">
+    <span>◆ SPORTS INTEL CONTAINMENT PROTOCOL ACTIVE</span>
+    <span class="bullet"></span>
+    <span>SPOILER LEAK SEVERITY: CRITICAL</span>
+    <span class="bullet"></span>
+    <span>15+ LANGUAGES MONITORED</span>
+    <span class="bullet"></span>
+    <span>14-DAY CLEARANCE AVAILABLE</span>
+    <span class="bullet"></span>
+    <span>ZERO DATA EXFILTRATION</span>
+    <span class="bullet"></span>
+    <span>◆ SPORTS INTEL CONTAINMENT PROTOCOL ACTIVE</span>
+    <span class="bullet"></span>
+    <span>SPOILER LEAK SEVERITY: CRITICAL</span>
+    <span class="bullet"></span>
+    <span>15+ LANGUAGES MONITORED</span>
+    <span class="bullet"></span>
+    <span>14-DAY CLEARANCE AVAILABLE</span>
+    <span class="bullet"></span>
+    <span>ZERO DATA EXFILTRATION</span>
+    <span class="bullet"></span>
+  </div>
+</div>
+
+<!-- Nav -->
+<nav>
+  <div class="container nav-inner">
+    <a href="#" class="logo">
+      <span class="logo-mark"></span>
+      <span class="logo-text">Spoiler Shield</span>
+    </a>
+    <div class="nav-right">
+      <div class="nav-status">
+        <span class="nav-dot"></span>
+        <span class="meta-label">Operational</span>
+      </div>
+      <a href="https://chromewebstore.google.com/detail/spoiler-shield/ndenomgckldachhdmfpgopjggoekgbgh" class="btn btn-primary" target="_blank" rel="noopener">
+        Install <span class="btn-arrow">→</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container">
+
+    <div class="hero-filebar meta">
+      <div>
+        <div class="filebar-item"><span class="meta-label">File</span><strong>SS-2026-4242</strong></div>
+        <div class="filebar-item"><span class="meta-label">Clearance</span><strong>Unrestricted</strong></div>
+        <div class="filebar-item"><span class="meta-label">Version</span><strong>3.1.1</strong></div>
+      </div>
+      <div>
+        <div class="filebar-item"><span class="meta-label">Classification</span><strong style="color: var(--stamp);">SPOILER-SENSITIVE</strong></div>
+      </div>
+    </div>
+
+    <div class="hero-stamp stamp">Clearance Required</div>
+
+    <div class="hero-layout">
+      <div class="hero-text fade-up">
+        <h1 class="display hero-headline">
+          <span class="line-1">You don't</span>
+          <span class="line-2">need to know</span>
+          <span class="line-3"><span class="hero-redact">the&nbsp;score.</span></span>
+        </h1>
+
+        <p class="hero-sub">
+          Spoiler Shield is a Chrome extension that <strong>redacts sports scores, results,
+          and spoiler thumbnails</strong> across every website — YouTube, Google, Reddit,
+          Twitter, news sites. Built for people who watch on delay.
+        </p>
+
+        <div class="hero-cta">
+          <a href="https://chromewebstore.google.com/detail/spoiler-shield/ndenomgckldachhdmfpgopjggoekgbgh" class="btn btn-primary" target="_blank" rel="noopener">
+            Activate Shield <span class="btn-arrow">→</span>
+          </a>
+          <a href="#protocol" class="btn btn-ghost">View Protocol</a>
+        </div>
+
+        <div class="hero-trust">
+          <div class="trust-stat">
+            <span class="num">15+</span>
+            <span class="label">Languages</span>
+          </div>
+          <div class="trust-stat">
+            <span class="num">14</span>
+            <span class="label">Day Trial</span>
+          </div>
+          <div class="trust-stat">
+            <span class="num">$4.99</span>
+            <span class="label">One-Time</span>
+          </div>
+          <div class="trust-stat">
+            <span class="num">0KB</span>
+            <span class="label">Data Sent</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-demo fade-up" style="animation-delay: 0.15s">
+        <div class="demo-label">
+          <span class="meta-label">Live Demo / YouTube</span>
+          <span class="meta-label" style="color: #3dd68c;">◉ Recording</span>
+        </div>
+        <div class="demo-frame">
+          <div class="demo-browser-bar">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="demo-url">youtube.com / search?q=highlights</div>
+            <div class="demo-shield-badge">◉ Shield</div>
+          </div>
+          <div class="demo-grid">
+
+            <div class="video-card">
+              <div class="video-thumb">
+                <div class="thumb-content">
+                  <span class="score">3–1</span>
+                  <span>Manchester United vs Liverpool</span>
+                </div>
+                <div class="thumb-redact"></div>
+              </div>
+              <div class="video-meta">
+                <div class="video-title">UNITED <span class="r">THRASH</span> LIVERPOOL <span class="r">3-1</span>: HIGHLIGHTS</div>
+                <div class="video-sub">Sky Sports · 2.1M views</div>
+              </div>
+            </div>
+
+            <div class="video-card">
+              <div class="video-thumb">
+                <div class="thumb-content">
+                  <span class="score">2–0</span>
+                  <span>Arsenal vs Chelsea</span>
+                </div>
+                <div class="thumb-redact"></div>
+              </div>
+              <div class="video-meta">
+                <div class="video-title">ARSENAL <span class="r">BEAT</span> CHELSEA <span class="r">2-0</span> / REVIEW</div>
+                <div class="video-sub">BBC Sport · 890K views</div>
+              </div>
+            </div>
+
+            <div class="video-card">
+              <div class="video-thumb">
+                <div class="thumb-content">
+                  <span class="score">FT</span>
+                  <span>Champions League</span>
+                </div>
+                <div class="thumb-redact"></div>
+              </div>
+              <div class="video-meta">
+                <div class="video-title">UCL FINAL: <span class="r">REAL MADRID WINS</span> 4-1</div>
+                <div class="video-sub">UEFA · 5.3M views</div>
+              </div>
+            </div>
+
+            <div class="video-card">
+              <div class="video-thumb">
+                <div class="thumb-content">
+                  <span class="score">LIVE</span>
+                  <span>Premier League</span>
+                </div>
+                <div class="thumb-redact"></div>
+              </div>
+              <div class="video-meta">
+                <div class="video-title">INCREDIBLE COMEBACK — <span class="r">5-3</span> AT FULL-TIME</div>
+                <div class="video-sub">NBC Sports · 1.4M views</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="demo-label" style="margin-top: 12px;">
+          <span class="meta-label">Hover any card to reveal</span>
+          <span class="meta-label">// blur: 16px · redact: active</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Leak map -->
+<section class="leaks">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-no">/01</div>
+      <div>
+        <h2 class="section-title">Intelligence<br>Leaks Detected</h2>
+        <p class="section-intro">
+          Sports media is optimized for people who already know the result. Scores, results,
+          and outcomes leak from every direction — faster than you can look away.
+        </p>
+      </div>
+    </div>
+
+    <div class="leaks-grid">
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-001</span>
+          <span class="leak-severity sev-high">Critical</span>
+        </div>
+        <div>
+          <div class="leak-name">YouTube</div>
+          <div class="leak-desc">Thumbnails spell out final scores before you click. Recommendations do the rest.</div>
+        </div>
+      </div>
+
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-002</span>
+          <span class="leak-severity sev-high">Critical</span>
+        </div>
+        <div>
+          <div class="leak-name">Google</div>
+          <div class="leak-desc">Search for "premier league" — the score widget appears. No warning, no opt-out.</div>
+        </div>
+      </div>
+
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-003</span>
+          <span class="leak-severity sev-med">High</span>
+        </div>
+        <div>
+          <div class="leak-name">Reddit</div>
+          <div class="leak-desc">Sidebar widgets, top-post titles, sticky game threads. Spoilers in every subreddit.</div>
+        </div>
+      </div>
+
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-004</span>
+          <span class="leak-severity sev-high">Critical</span>
+        </div>
+        <div>
+          <div class="leak-name">Twitter / X</div>
+          <div class="leak-desc">Trending topics. "For You" timeline. Quote tweets. Sports Twitter is a spoiler minefield.</div>
+        </div>
+      </div>
+
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-005</span>
+          <span class="leak-severity sev-med">High</span>
+        </div>
+        <div>
+          <div class="leak-name">News Sites</div>
+          <div class="leak-desc">ESPN, BBC Sport, The Athletic — headlines and previews reveal outcomes in the first sentence.</div>
+        </div>
+      </div>
+
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-006</span>
+          <span class="leak-severity sev-med">High</span>
+        </div>
+        <div>
+          <div class="leak-name">Facebook</div>
+          <div class="leak-desc">Friends post results the second the final whistle blows. Auto-playing video clips seal the deal.</div>
+        </div>
+      </div>
+
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-007</span>
+          <span class="leak-severity sev-low">Moderate</span>
+        </div>
+        <div>
+          <div class="leak-name">Push Alerts</div>
+          <div class="leak-desc">Every sports app you forgot to mute. Lock screen spoilers at the worst times.</div>
+        </div>
+      </div>
+
+      <div class="leak">
+        <div class="leak-head">
+          <span class="leak-no">LK-008</span>
+          <span class="leak-severity sev-low">Moderate</span>
+        </div>
+        <div>
+          <div class="leak-name">Everywhere Else</div>
+          <div class="leak-desc">Forums, blogs, embedded widgets, autocomplete suggestions. Spoiler Shield covers them all.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Protocol -->
+<section class="protocol" id="protocol">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-no">/02</div>
+      <div>
+        <h2 class="section-title">Containment<br>Protocol</h2>
+        <p class="section-intro">
+          A three-stage process that runs entirely inside your browser. No servers, no telemetry,
+          no data leaves your machine. Installed in ten seconds. Active on every tab.
+        </p>
+      </div>
+    </div>
+
+    <div class="protocol-steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-tag">Stage 01 · Detect</div>
+        <h3 class="step-title">Scan the page</h3>
+        <p class="step-body">
+          As soon as a page starts loading, Spoiler Shield scans text and images for score
+          patterns (<code>3-1</code>, <code>2:0</code>), outcome words (<em>beat, thrash, won</em>),
+          and team names in 15+ languages.
+        </p>
+        <span class="step-connector">→</span>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-tag">Stage 02 · Redact</div>
+        <h3 class="step-title">Hide the spoilers</h3>
+        <p class="step-body">
+          Scores become shield icons. Outcome words are masked. Thumbnails near sports content
+          are blurred. Happens before the page finishes rendering — no flash of forbidden data.
+        </p>
+        <span class="step-connector">→</span>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-tag">Stage 03 · Reveal</div>
+        <h3 class="step-title">On your terms</h3>
+        <p class="step-body">
+          Watched the match? Press <kbd>Alt</kbd> + <kbd>S</kbd> to toggle off. Or click any
+          individual element to reveal just that one. Full control, always.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-no">/03</div>
+      <div>
+        <h2 class="section-title">Field<br>Capabilities</h2>
+        <p class="section-intro">
+          What every operative gets at deployment. Fast, quiet, and designed to stay out of your way
+          until a spoiler tries to get in.
+        </p>
+      </div>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-tag">FC-01 · COVERAGE</div>
+        <div class="feature-icon">⊕</div>
+        <h3 class="feature-title">Every Website</h3>
+        <p class="feature-body">
+          Runs on every URL you visit. Not a whitelist — a wall. YouTube, Google, Reddit, Twitter,
+          ESPN, BBC, The Athletic, and whatever comes next.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-tag">FC-02 · SPORTS</div>
+        <div class="feature-icon">⊗</div>
+        <h3 class="feature-title">Any Sport</h3>
+        <p class="feature-body">
+          Football, NBA, NFL, MLB, NHL, F1, MotoGP, UFC, cricket, rugby, tennis, golf, esports.
+          Team names in English, Spanish, Portuguese, Japanese, Thai, Arabic, and more.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-tag">FC-03 · SPEED</div>
+        <div class="feature-icon">↯</div>
+        <h3 class="feature-title">Instant</h3>
+        <p class="feature-body">
+          Under 70KB. Runs at <code>document_start</code>. No flash of spoiler content, no page
+          lag, no loading indicator. You won't notice it's there — until you notice it's working.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-tag">FC-04 · PRIVACY</div>
+        <div class="feature-icon">◉</div>
+        <h3 class="feature-title">Zero Telemetry</h3>
+        <p class="feature-body">
+          All scanning runs locally in your browser. No browsing history collected. No analytics,
+          no tracking, no third-party requests. The code is open — inspect it yourself.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-tag">FC-05 · CONTROL</div>
+        <div class="feature-icon">◈</div>
+        <h3 class="feature-title">One Keystroke</h3>
+        <p class="feature-body">
+          <kbd>Alt</kbd>+<kbd>S</kbd> toggles protection off when you're ready to watch.
+          Click any redacted element to reveal just that one. The shield respects your decision.
+        </p>
+      </div>
+      <div class="feature">
+        <div class="feature-tag">FC-06 · PRICING</div>
+        <div class="feature-icon">⌀</div>
+        <h3 class="feature-title">Pay Once</h3>
+        <p class="feature-body">
+          14-day full trial. Then $4.99, one-time, forever. No subscriptions, no auto-renew,
+          no "introductory pricing." Pay once, own it.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-no">/04</div>
+      <div>
+        <h2 class="section-title">Request<br>Clearance</h2>
+        <p class="section-intro">
+          Clearance is a one-time fee of $4.99. There are no recurring charges, no tiered plans,
+          no upsells. If you ever uninstall, we won't chase you.
+        </p>
+      </div>
+    </div>
+
+    <div class="pricing-stamp stamp" style="transform: rotate(6deg);">No Subscription</div>
+
+    <div class="receipt">
+      <div class="receipt-head">
+        <span class="receipt-title">Clearance Receipt</span>
+        <span class="receipt-ref">Ref · SS-4242-C</span>
+      </div>
+
+      <div class="receipt-row">
+        <span>14-day full-access trial</span>
+        <span>$0.00</span>
+      </div>
+      <div class="receipt-row">
+        <span>All sports & leagues</span>
+        <span>included</span>
+      </div>
+      <div class="receipt-row">
+        <span>Works on every website</span>
+        <span>included</span>
+      </div>
+      <div class="receipt-row">
+        <span>15+ languages</span>
+        <span>included</span>
+      </div>
+      <div class="receipt-row">
+        <span>Zero data collection</span>
+        <span>included</span>
+      </div>
+      <div class="receipt-row">
+        <span>All future updates</span>
+        <span>included</span>
+      </div>
+      <div class="receipt-row">
+        <span>Subscription fee</span>
+        <span><span class="strike">$4.99/mo</span> $0.00</span>
+      </div>
+
+      <div class="receipt-row total">
+        <span>Total · One-Time</span>
+        <span>$4.99</span>
+      </div>
+
+      <div class="receipt-cta">
+        <a href="https://chromewebstore.google.com/detail/spoiler-shield/ndenomgckldachhdmfpgopjggoekgbgh" class="btn" target="_blank" rel="noopener">
+          Start 14-Day Trial <span class="btn-arrow">→</span>
+        </a>
+      </div>
+
+      <div class="receipt-foot">
+        · Stripe secured · Manifest V3 · No credit card for trial ·
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interrogation / FAQ -->
+<section class="interrogation">
+  <div class="container">
+    <div class="section-head">
+      <div class="section-no">/05</div>
+      <div>
+        <h2 class="section-title">Interrogation<br>Transcript</h2>
+        <p class="section-intro">
+          Answers to questions we've fielded. If yours isn't here, <a href="mailto:dev@sala-daeng.com" style="color: var(--ink);">send it in</a>.
+        </p>
+      </div>
+    </div>
+
+    <div class="qa-list">
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 01</span>
+          <span class="qa-q-text">Does this really work on every website?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          Yes. The extension runs on every URL you visit and scans page text and images for score
+          patterns and sports keywords. We've tested it on YouTube, Google, Reddit, Twitter, ESPN,
+          BBC, and many more. If you find a site where it misses a spoiler,
+          <a href="mailto:dev@sala-daeng.com">email us</a> and we'll patch it.
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 02</span>
+          <span class="qa-q-text">What languages are supported?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          Team names are recognized in English, Spanish, Portuguese, French, German, Italian,
+          Japanese, Korean, Chinese, Thai, Arabic, Turkish, Russian, Dutch, and more — 15+ languages total.
+          The numeric score patterns (3-1, 2:0) are language-agnostic.
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 03</span>
+          <span class="qa-q-text">Do you collect any data?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          No. Nothing. All detection runs locally in your browser. No analytics, no tracking,
+          no browsing history sent anywhere. You can read the
+          <a href="privacy.html">privacy policy</a> or inspect the source.
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 04</span>
+          <span class="qa-q-text">Why does it need access to all websites?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          Because spoilers come from everywhere. The extension needs permission to scan page
+          contents to blur the spoilers. It only runs detection locally — nothing is transmitted.
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 05</span>
+          <span class="qa-q-text">Is it really a one-time payment?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          Yes. $4.99 once, yours forever, including all future updates. If we ever introduce an
+          advanced subscription tier, existing one-time buyers keep everything they paid for.
+          No rug-pulls.
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 06</span>
+          <span class="qa-q-text">What happens after the 14-day trial?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          Protection pauses. You'll see a clear prompt to upgrade for $4.99. You can ignore it,
+          or uninstall — we won't nag. No credit card is stored during the trial.
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 07</span>
+          <span class="qa-q-text">Does it work on mobile?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          Not yet. Chrome on iOS and Android doesn't support extensions. Firefox Android is on
+          the roadmap — subscribe to the <a href="https://blog.spoilershield.com">blog</a> for updates.
+        </div>
+      </details>
+
+      <details class="qa">
+        <summary class="qa-q">
+          <span class="qa-mark">Q · 08</span>
+          <span class="qa-q-text">What if I find a spoiler that slips through?</span>
+          <span class="qa-toggle">+</span>
+        </summary>
+        <div class="qa-a">
+          <a href="mailto:dev@sala-daeng.com">Email us</a> with the URL. We patch detection rules
+          fast — usually within the week — and ship updates automatically.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="final-cta">
+  <div class="container">
+    <h2 class="final-headline">
+      Watch on your<br>
+      <em>own time.</em>
+    </h2>
+    <p class="final-sub">
+      Fourteen days. Every feature. No credit card. Then $4.99 once if you want to keep it.
+    </p>
+    <a href="https://chromewebstore.google.com/detail/spoiler-shield/ndenomgckldachhdmfpgopjggoekgbgh" class="btn btn-primary" target="_blank" rel="noopener" style="padding: 20px 36px; font-size: 14px;">
+      Install From Chrome Web Store <span class="btn-arrow">→</span>
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h4>Spoiler Shield</h4>
+        <div class="footer-doc">
+          A browser extension for people who watch sports on delay.<br>
+          Built by <a href="https://github.com/saranpol" target="_blank" rel="noopener" style="color: var(--ink); text-decoration: underline; text-underline-offset: 3px;">saran.pol</a> · Code open on GitHub.
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="https://chromewebstore.google.com/detail/spoiler-shield/ndenomgckldachhdmfpgopjggoekgbgh" target="_blank" rel="noopener">Chrome Web Store</a>
+        <a href="#protocol">How It Works</a>
+        <a href="#" onclick="document.querySelector('.pricing').scrollIntoView({behavior:'smooth'}); return false;">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="https://blog.spoilershield.com" target="_blank" rel="noopener">Blog</a>
+        <a href="https://github.com/saranpol/spoiler-shield" target="_blank" rel="noopener">GitHub</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="mailto:dev@sala-daeng.com">dev@sala-daeng.com</a>
+        <a href="mailto:dev@sala-daeng.com?subject=Spoiler%20Report">Report a Leak</a>
+      </div>
+    </div>
+    <div class="footer-meta">
+      <span>DOC // SS-LANDING-2026 · CLASSIFICATION: PUBLIC · INTEGRITY: VERIFIED</span>
+      <span>© 2026 SPOILER SHIELD · ALL RIGHTS RESERVED</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Observe sections for subtle fade-in as they enter viewport.
+// We use a class rather than inline opacity so elements remain visible
+// if JS fails, and the animation's fill-mode handles the end state.
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('fade-up');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('.leak, .step, .feature, .qa')
+  .forEach((el, i) => {
+    el.style.animationDelay = (i % 3) * 80 + 'ms';
+    observer.observe(el);
+  });
+
+// Allow clicking video cards to reveal permanently
+document.querySelectorAll('.video-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const redact = card.querySelector('.thumb-redact');
+    const titles = card.querySelectorAll('.video-title .r');
+    if (redact) redact.style.opacity = '0';
+    titles.forEach(t => {
+      t.style.background = 'transparent';
+      t.style.color = 'var(--ink)';
+      t.style.boxShadow = 'none';
+    });
+  });
+});
+
+// Year in footer (future-proof)
+const yearText = document.querySelector('.footer-meta');
+// already set to 2026
+</script>
+
+</body>
+</html>
