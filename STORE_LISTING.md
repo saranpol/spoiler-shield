@@ -29,8 +29,8 @@ Spoiler Shield automatically detects and hides sports scores, results, and spoil
 • No data collection — everything runs locally in your browser
 • Lightweight and fast — under 70KB
 
-🎁 FREE TRIAL
-Try everything free for 14 days. After that, football protection stays free forever. Unlock all sports for a one-time payment of $4.99.
+🎁 14-DAY FREE TRIAL
+Try every feature free for 14 days — no credit card required. Keep protection forever for a one-time payment of $4.99. No subscriptions, no recurring charges.
 
 🔒 PRIVACY
 Spoiler Shield does NOT collect any data. All scanning happens locally on your device. No browsing history, no tracking, no analytics. Period.
@@ -41,3 +41,6 @@ Found a spoiler that got through? Report it and we'll patch it fast.
 
 ## Category
 Productivity
+
+## What's new — v3.1.1
+Fixed trial behavior: protection now fully pauses when your 14-day trial ends, so you'll clearly see when it's time to unlock. One-time $4.99 to keep it forever.
