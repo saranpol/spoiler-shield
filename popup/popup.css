@@ -216,6 +216,91 @@ input:focus-visible + .track {
   outline-offset: 2px;
 }
 
+/* ---- Per-site pause row ---- */
+.site-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+}
+
+.site-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.site-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #52525B;
+}
+
+.site-host {
+  font-size: 12px;
+  font-weight: 500;
+  color: #A1A1AA;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-host.paused {
+  color: #71717A;
+  text-decoration: line-through;
+}
+
+.site-btn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  background: transparent;
+  color: #A1A1AA;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.site-btn:hover {
+  color: #E4E4E7;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.site-btn.paused {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #F59E0B;
+}
+
+/* ---- Trial urgency (last 3 days) ---- */
+.tier-days.urgent {
+  color: #EF4444 !important;
+  font-weight: 700;
+}
+
+.keep-btn.urgent {
+  background: #F59E0B;
+  border-color: #F59E0B;
+  color: #111318;
+  font-weight: 700;
+  padding: 10px 16px;
+  font-size: 13px;
+}
+
+.keep-btn.urgent:hover {
+  background: #D97706;
+  border-color: #D97706;
+}
+
 /* ---- Upgrade Button ---- */
 .upgrade-btn {
   width: 100%;
@@ -262,6 +347,12 @@ input:focus-visible + .track {
   background: rgba(245, 158, 11, 0.15);
 }
 
+/* After :active so the pressed state keeps dark text legible on amber */
+.keep-btn.urgent:active {
+  background: #B45309;
+  border-color: #B45309;
+}
+
 /* ---- Description ---- */
 .description {
   font-size: 12px;
@@ -291,8 +382,29 @@ kbd {
 /* ---- Footer ---- */
 .footer {
   text-align: center;
-  padding-top: 4px;
+  padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footer-links {
+  font-size: 11px;
+}
+
+.footer-links a {
+  color: #71717A;
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: #F59E0B;
+}
+
+.footer-dot {
+  color: #3F3F46;
+  margin: 0 4px;
 }
 
 .dev-credit {

@@ -24,6 +24,7 @@ Spoiler Shield automatically detects and hides sports scores, results, and spoil
 
 ⚡ FEATURES
 • One-click toggle on/off
+• Pause protection on a single site (new!)
 • Keyboard shortcut (Alt+S) for instant toggle
 • Works on ALL websites — not just YouTube
 • No data collection — everything runs locally in your browser
@@ -42,5 +43,9 @@ Found a spoiler that got through? Report it and we'll patch it fast.
 ## Category
 Productivity
 
-## What's new — v3.1.1
-Fixed trial behavior: protection now fully pauses when your 14-day trial ends, so you'll clearly see when it's time to unlock. One-time $4.99 to keep it forever.
+## What's new — v3.2.0
+• NEW: Pause Spoiler Shield on a single site straight from the popup
+• NEW: Onboarding page after install — see the shield working in under a minute
+• Trial countdown badge in your toolbar for the last 3 days
+• Fixed: toggling the shield back on now always re-protects dynamic content
+• One-time $4.99 to keep it forever — no subscription

@@ -12,14 +12,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   const paidBadge = document.getElementById('paidBadge');
   const upgradeBtn = document.getElementById('upgradeBtn');
   const keepBtn = document.getElementById('keepBtn');
+  const siteRow = document.getElementById('siteRow');
+  const siteHostEl = document.getElementById('siteHost');
+  const siteBtn = document.getElementById('siteBtn');
+  const shortcutHint = document.getElementById('shortcutHint');
 
   const TRIAL_DAYS = 14;
 
-  const stored = await chrome.storage.local.get(['enabled', 'tier']);
+  const stored = await chrome.storage.local.get(['enabled', 'tier', 'disabledSites']);
   const syncData = await chrome.storage.sync.get(['installDate']);
   let enabled = stored.enabled !== false;
   let tier = stored.tier || 'trial';
+  let disabledSites = Array.isArray(stored.disabledSites) ? stored.disabledSites : [];
   let installDate = syncData.installDate || Date.now();
+
+  // Current tab hostname (activeTab permission is granted when the popup opens)
+  let siteHost = null;
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    // Normalized to match content-script matching (www.espn.com === espn.com)
+    if (tab && tab.url && /^https?:/i.test(tab.url)) siteHost = new URL(tab.url).hostname.replace(/^www\./, '');
+  } catch (e) { /* no active tab access — hide the site row */ }
 
   function daysLeft() {
     const elapsed = Date.now() - installDate;
@@ -39,6 +52,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     keepBtn.style.display = 'none';
     tierBanner.style.display = 'none';
     trialProgress.style.display = 'none';
+    keepBtn.classList.remove('urgent');
+    tierDays.classList.remove('urgent');
+    shortcutHint.style.display = '';
 
     if (tier === 'pro') {
       // Paid user — just a ✓ and clean message
@@ -59,6 +75,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       trialBar.style.width = pct + '%';
       // Subtle "keep it" button — can pay anytime
       keepBtn.style.display = 'block';
+      // Last 3 days: turn up the urgency
+      if (days <= 3) {
+        tierDays.classList.add('urgent');
+        keepBtn.classList.add('urgent');
+      }
       desc.textContent = enabled
         ? 'All sports protected. Free for ' + days + ' more days.'
         : 'Protection is disabled. Spoilers may be visible.';
@@ -70,12 +91,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       tierLabel.textContent = 'Trial Ended';
       tierDays.textContent = 'Upgrade to continue';
       upgradeBtn.style.display = 'block';
-      // Force toggle off and disable it
+      // Force toggle off — but leave it clickable: the change handler
+      // intercepts the click and opens the payment page (upgrade nudge)
       toggle.checked = false;
-      toggle.disabled = true;
       badge.textContent = 'Off';
       badge.className = 'badge inactive';
       desc.textContent = 'Your free trial has ended. Upgrade to keep your sports spoiler-free.';
+      // Alt+S is deliberately inert in this tier — don't advertise it
+      shortcutHint.style.display = 'none';
+    }
+
+    // Per-site pause row — only for active tiers on regular web pages
+    if (siteHost && tier !== 'free' && enabled) {
+      siteRow.style.display = 'flex';
+      const paused = disabledSites.includes(siteHost);
+      siteHostEl.textContent = siteHost;
+      siteHostEl.classList.toggle('paused', paused);
+      siteBtn.textContent = paused ? 'Resume' : 'Pause here';
+      siteBtn.classList.toggle('paused', paused);
+    } else {
+      siteRow.style.display = 'none';
     }
   }
 
@@ -89,6 +124,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     enabled = toggle.checked;
     chrome.storage.local.set({ enabled });
+    updateUI();
+  });
+
+  siteBtn.addEventListener('click', () => {
+    if (!siteHost) return;
+    if (disabledSites.includes(siteHost)) {
+      disabledSites = disabledSites.filter(h => h !== siteHost);
+    } else {
+      disabledSites = [...disabledSites, siteHost];
+    }
+    chrome.storage.local.set({ disabledSites });
     updateUI();
   });
 

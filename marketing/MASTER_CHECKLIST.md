@@ -4,10 +4,15 @@
 
 ## 🔴 TODAY — Must do before anything else
 
-- [ ] **Upload v3.1.1 zip** to Chrome Web Store
-  - ไฟล์: `/Users/saranpol/POL/spoiler-shield/spoiler-shield.zip`
+- [ ] **Merge v3.2.0 branch → main ก่อน แล้วรอ GitHub Pages deploy**
+  - เช็คว่า `https://saranpol.github.io/spoiler-shield/uninstall.html` ขึ้น 200 ก่อนค่อย submit store
+  - (extension ตั้ง uninstall URL ชี้ไปหน้านี้ — ถ้า 404 = เสีย exit feedback ฟรีๆ)
+
+- [ ] **Upload v3.2.0 zip** to Chrome Web Store
+  - ไฟล์: `/Users/saranpol/POL/spoiler-shield/spoiler-shield.zip` (สร้างใหม่จาก v3.2.0 — Conversion Update)
   - [Dashboard](https://chrome.google.com/webstore/devconsole) → Spoiler Shield → Package → Upload new package
   - Submit for review (1-3 days)
+  - v3.2.0 เพิ่ม: welcome page, trial-expired pitch page, thanks+review page, per-site pause, countdown badge, uninstall feedback page
 
 - [ ] **Update store listing**
   - Copy ใหม่จาก `STORE_LISTING.md`

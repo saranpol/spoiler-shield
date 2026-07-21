@@ -6,8 +6,13 @@
 (async () => {
   // --- State ---
   let enabled = true;
+  let siteDisabled = false; // user paused this hostname from the popup
+  // Normalized so www.espn.com and espn.com are the same site (popup stores it normalized)
+  const SITE_HOST = location.hostname.replace(/^www\./, '');
   let processed = new WeakSet();
   let originals = new Map(); // TextNode → original nodeValue
+
+  function isActive() { return enabled && !siteDisabled; }
 
   // --- Patterns ---
 
@@ -51,6 +56,9 @@
     '\\b(?:galibiyet|kazan\\w*|kaybetmek|ma[gğ]lubiyet|beraberlik)\\b',
     // ID
     '\\b(?:menang|kemenangan|kalah|kekalahan|seri|imbang)\\b',
+    // RU (no \b — word boundaries don't work around Cyrillic, same as AR/TH below)
+    'победа', 'побед(?:ил|или|ой)', 'выиграл', 'проиграл', 'поражение',
+    'ничья', 'вничью', 'разгром', 'обыграл', 'уступил', 'камбэк',
     // AR
     'فوز', 'هزيمة', 'خسارة', 'تعادل', 'سحق',
     // JA
@@ -79,11 +87,11 @@
   // Matchup: "TeamA vs TeamB" — words on both sides of a versus-like connector
   // Matches: "Barcelona VS Real Madrid", "Liverpool v Arsenal", "แมนยู พบ ลิเวอร์พูล"
   const MATCHUP = new RegExp(
-    '[A-Za-z\\u0E00-\\u0E7F\\u0600-\\u06FF\\u3000-\\u9FFF\\uAC00-\\uD7AF]\\S*' +
+    '[A-Za-z\\u0400-\\u04FF\\u0E00-\\u0E7F\\u0600-\\u06FF\\u3000-\\u9FFF\\uAC00-\\uD7AF]\\S*' +
     '.*?' +
-    '(?:\\bvs?\\.?\\b|\\bversus\\b|พบ|ดวล|เยือน|แข่ง|\\bcontra\\b|ضد|対|대)' +
+    '(?:\\bvs?\\.?\\b|\\bversus\\b|พบ|ดวล|เยือน|แข่ง|\\bcontra\\b|против|ضد|対|대)' +
     '.*?' +
-    '[A-Za-z\\u0E00-\\u0E7F\\u0600-\\u06FF\\u3000-\\u9FFF\\uAC00-\\uD7AF]\\S*',
+    '[A-Za-z\\u0400-\\u04FF\\u0E00-\\u0E7F\\u0600-\\u06FF\\u3000-\\u9FFF\\uAC00-\\uD7AF]\\S*',
     'i'
   );
 
@@ -103,6 +111,8 @@
     '\\bTore?\\b', '\\bSpiel\\b', '\\bFu[sß]ball\\b',
     '\\bpartita\\b', '\\bcalcio\\b', '\\bwedstrijd\\b', '\\bvoetbal\\b',
     '\\bma[cç]\\b', '\\bfutbol\\b',
+    // RU football terms
+    'футбол', 'обзор\\s*матча', 'голы', 'матч', 'лига\\s*чемпионов', 'РПЛ',
     // AR/JA/KO/ZH
     'ملخص', 'مباراة', 'كرة\\s*القدم',
     'ハイライト', '試合', 'サッカー',
@@ -182,55 +192,69 @@
   // Safety: always reveal after 1.5s even if something fails
   setTimeout(reveal, 1500);
 
-  const stored = await chrome.storage.local.get(['enabled', 'tier']);
+  const stored = await chrome.storage.local.get(['enabled', 'tier', 'disabledSites']);
   enabled = stored.enabled !== false;
   tier = stored.tier || 'trial';
+  siteDisabled = Array.isArray(stored.disabledSites) && stored.disabledSites.includes(SITE_HOST);
   SPORTS = buildSportsRegex(tier);
 
   // Trial expired → force disabled, extension does nothing
   if (tier === 'free') enabled = false;
 
-  // Toggle listener MUST be registered BEFORE the early return
-  // so toggling ON works even if the script started disabled
-  chrome.storage.onChanged.addListener((changes) => {
+  // Cleanly re-apply the current on/off state:
+  // restore everything first, then re-scan if active
+  // (only runs from storage events, after the whole script has evaluated,
+  // so the hover-preview state below is always initialized)
+  function applyActiveState() {
+    // Reset YouTube hover-preview kill state
+    killTimers.forEach(t => clearTimeout(t));
+    killTimers = [];
+    overShielded = false;
+    restorePreview();
+
+    unshieldAll();
+    if (isActive()) {
+      // Body not parsed yet — scan() would no-op and reveal would expose
+      // spoilers; stay hidden, the scheduled scans / safety reveal take over
+      if (!document.body) return;
+      scan();
+    }
+    reveal();
+  }
+
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local') return;
+    let dirty = false;
     if (changes.tier) {
       tier = changes.tier.newValue;
       SPORTS = buildSportsRegex(tier);
       // Trial expired → force disabled
-      if (tier === 'free') {
-        enabled = false;
-        unshieldAll();
-        reveal();
-        return;
-      }
+      if (tier === 'free') enabled = false;
+      dirty = true;
     }
     if (changes.enabled) {
       // Block enabling if trial expired
-      if (tier === 'free') return;
-      enabled = changes.enabled.newValue;
-      if (!enabled) {
-        unshieldAll();
-        reveal();
-      } else {
-        processed = new WeakSet();
-        originals.clear();
-        scan();
-        reveal();
+      if (!(tier === 'free' && changes.enabled.newValue)) {
+        enabled = changes.enabled.newValue;
+        dirty = true;
       }
     }
-    if (changes.tier && tier !== 'free') {
-      // Re-scan with new patterns (e.g. upgraded to pro)
-      processed = new WeakSet();
-      originals.clear();
-      document.querySelectorAll('[data-ss]').forEach(el => el.removeAttribute('data-ss'));
-      document.querySelectorAll('.spoiler-shield-blurred').forEach(el =>
-        el.classList.remove('spoiler-shield-blurred'));
-      document.querySelectorAll('.spoiler-shield-badge').forEach(el => el.remove());
-      if (enabled) scan();
+    if (changes.disabledSites) {
+      const list = Array.isArray(changes.disabledSites.newValue) ? changes.disabledSites.newValue : [];
+      const nowDisabled = list.includes(SITE_HOST);
+      // Only re-apply when THIS site's pause state changed — otherwise pausing
+      // one site would force a rescan (and re-blur revealed widgets) in every tab
+      if (nowDisabled !== siteDisabled) {
+        siteDisabled = nowDisabled;
+        dirty = true;
+      }
     }
+    if (dirty) applyActiveState();
   });
 
-  if (!enabled) { reveal(); return; }
+  // Even when starting disabled, keep going: observers and listeners must be
+  // registered so toggling ON later works fully (incl. dynamic content)
+  if (!isActive()) reveal();
 
   // --- Replace scores/outcomes in a text node ---
 
@@ -448,7 +472,7 @@
   // --- Main scan ---
 
   function scan() {
-    if (!enabled || !document.body) return;
+    if (!isActive() || !document.body) return;
 
     // 1. Google score widgets — blur entirely
     document.querySelectorAll(
@@ -546,7 +570,7 @@
   // Observe documentElement (never replaced) instead of body
   let scanTimer = null;
   const mainObserver = new MutationObserver(() => {
-    if (!enabled) return;
+    if (!isActive()) return;
     clearTimeout(scanTimer);
     scanTimer = setTimeout(scan, 150);
   });
@@ -603,7 +627,7 @@
   }
 
   document.addEventListener('mouseover', (e) => {
-    if (!enabled || !e.target || !e.target.closest) return;
+    if (!isActive() || !e.target || !e.target.closest) return;
     const shielded = e.target.closest('[data-ss="1"]');
 
     if (shielded) {
@@ -662,26 +686,27 @@
 
   // Primary: fires after YouTube SPA navigation completes
   document.addEventListener('yt-navigate-finish', () => {
+    if (!isActive()) return;
     ytReset();
     ytScheduleScans();
   });
 
   // Secondary: fires when YouTube page data is updated (sometimes after yt-navigate-finish)
   document.addEventListener('yt-page-data-updated', () => {
-    if (!enabled) return;
+    if (!isActive()) return;
     ytScheduleScans();
   });
 
   // Tertiary: catch YouTube re-renders (e.g., scrolling loads more items)
   document.addEventListener('yt-visibility-refresh', () => {
-    if (!enabled) return;
+    if (!isActive()) return;
     clearTimeout(scanTimer);
     scanTimer = setTimeout(scan, 100);
   });
 
   // YouTube also uses popstate for back/forward
   window.addEventListener('popstate', () => {
-    if (!location.hostname.includes('youtube.com')) return;
+    if (!isActive() || !location.hostname.includes('youtube.com')) return;
     ytReset();
     ytScheduleScans();
   });

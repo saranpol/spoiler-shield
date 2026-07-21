@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spoiler Shield — Debrief</title>
+<meta name="robots" content="noindex">
+<!-- Self-contained on purpose: no Google Fonts, so "no tracking on this page" stays literally true -->
+<style>
+:root {
+  --paper: #0f0e0c;
+  --paper-2: #1a1815;
+  --ink: #ece3cb;
+  --ink-dim: #9a9078;
+  --ink-faint: #504836;
+  --stamp: #e63946;
+  --caution: #ffb700;
+  --line: rgba(236, 227, 203, 0.12);
+  --line-strong: rgba(236, 227, 203, 0.28);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+.page { max-width: 640px; margin: 0 auto; padding: 56px 28px 80px; }
+.meta-bar {
+  display: flex; flex-wrap: wrap; gap: 6px 18px;
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-dim);
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
+  padding: 10px 2px; margin-bottom: 48px;
+}
+.meta-bar .bad { color: var(--stamp); }
+.display {
+  font-family: 'Anton', Impact, 'Arial Narrow', sans-serif;
+  text-transform: uppercase;
+  line-height: 0.95;
+  font-size: clamp(44px, 10vw, 72px);
+  margin-bottom: 20px;
+}
+.typewriter { font-family: Georgia, 'Times New Roman', serif; }
+.sub { font-size: 15px; color: var(--ink-dim); max-width: 52ch; margin-bottom: 40px; }
+.sub strong { color: var(--ink); font-weight: 500; }
+.q {
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--caution); margin-bottom: 16px;
+}
+.reasons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 44px; }
+.reason {
+  display: block;
+  border: 1px solid var(--line-strong);
+  background: var(--paper-2);
+  border-radius: 4px;
+  padding: 14px 18px;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 13px;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+.reason:hover { border-color: var(--caution); }
+.reason:active { transform: translateY(1px); }
+.reason span { color: var(--ink-faint); display: block; font-size: 11px; margin-top: 2px; }
+.back {
+  border-top: 1px dashed var(--line-strong);
+  padding-top: 28px;
+}
+.back p { font-size: 12px; color: var(--ink-dim); margin-bottom: 14px; }
+.btn {
+  display: inline-block;
+  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+  text-decoration: none; border-radius: 4px;
+  padding: 13px 24px; font-weight: 700;
+  background: var(--caution); color: #16130a;
+}
+.btn:hover { background: #ffc633; }
+.foot {
+  margin-top: 48px; padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11px; color: var(--ink-faint); letter-spacing: 0.08em;
+}
+.foot a { color: var(--ink-dim); text-decoration: none; }
+.foot a:hover { color: var(--ink); text-decoration: underline; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="meta-bar">
+      <span>CASE FILE — SS</span>
+      <span>STATUS: <span class="bad">CLOSED</span></span>
+      <span>EXIT DEBRIEF</span>
+    </div>
+
+    <h1 class="display">Debrief.</h1>
+
+    <p class="sub typewriter">Spoiler Shield has been uninstalled. Fair enough —
+      but this is a one-person project, and <strong>one sentence from you decides
+      what gets fixed next.</strong> Fifteen seconds:</p>
+
+    <p class="q">What went wrong?</p>
+    <div class="reasons">
+      <a class="reason" href="https://github.com/saranpol/spoiler-shield/issues/new?title=Uninstalled%3A%20it%20hid%20things%20it%20shouldn%27t&body=Which%20site%20%2F%20what%20content%20got%20hidden%20by%20mistake%3F%0A%0A">It hid things it shouldn't have
+        <span>false positives — tell me the site, I'll patch it</span></a>
+      <a class="reason" href="https://github.com/saranpol/spoiler-shield/issues/new?title=Uninstalled%3A%20a%20spoiler%20got%20through&body=Where%20did%20you%20see%20the%20spoiler%3F%20(site%20%2B%20what%20it%20said)%0A%0A">A spoiler still got through
+        <span>tell me where — these get fixed fast</span></a>
+      <a class="reason" href="https://github.com/saranpol/spoiler-shield/issues/new?title=Uninstalled%3A%20pricing&body=What%20would%20have%20felt%20fair%3F%0A%0A">The price wasn't right
+        <span>$4.99 once — what would have felt fair?</span></a>
+      <a class="reason" href="https://github.com/saranpol/spoiler-shield/issues/new?title=Uninstalled%3A%20other%20reason&body=What%20happened%3F%0A%0A">Something else
+        <span>anything — bugs, speed, confusion</span></a>
+    </div>
+
+    <div class="back">
+      <p class="typewriter">Changed your mind? The shield goes back up in one click —
+        and if your trial ran out, it's $4.99 once, forever.</p>
+      <a class="btn" href="https://chromewebstore.google.com/detail/spoiler-shield/ndenomgckldachhdmfpgopjggoekgbgh" target="_blank" rel="noopener">Reinstall Spoiler Shield</a>
+    </div>
+
+    <div class="foot">
+      Built by <a href="https://github.com/saranpol" target="_blank" rel="noopener">saran.pol</a> ·
+      <a href="https://saranpol.github.io/spoiler-shield/">spoiler shield</a> ·
+      no tracking on this page, ever.
+    </div>
+  </div>
+</body>
+</html>
