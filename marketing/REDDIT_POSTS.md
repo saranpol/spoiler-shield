@@ -22,7 +22,7 @@ Work in a different timezone from my team, so I watch pretty much every match on
 
 Tried browsing with my eyes half-closed. Didn't work.
 
-So I built a Chrome extension that just… blurs all of it. Scores get replaced with a shield icon, outcome words (beat, thrash, lose) get masked, and thumbnails near anything sports-related get blurred until I hover.
+So I built a Chrome extension that just… blurs all of it. Scores get replaced with a shield icon, outcome words (beat, thrash, lose) get masked, and thumbnails near anything sports-related get blurred until I choose to look.
 
 Works on every site. Alt+S to toggle on/off when you're done watching.
 
@@ -105,7 +105,8 @@ Technical highlights:
 - Content script with MutationObserver for SPAs (YouTube is a nightmare)
 - Scans text for score patterns (3-1, 2:0, 1 vs 1) and outcome words
 - Blurs images near sports-related text
-- Multi-language team name matching (EN, ES, PT, JA, TH, 15+ total)
+- Multi-language matching, 15 languages (EN, ES, PT, FR, DE, IT, NL, TR, ID, AR, JA, KO, ZH, TH, RU)
+- Per-site pause (activeTab so no scary permission warnings)
 - Everything runs locally, no data collection
 
 Stack: vanilla JS (no framework needed), ~70KB total.
@@ -122,11 +123,38 @@ Monetization: 14-day trial, $4.99 one-time. ExtensionPay for Stripe. Planning to
 
 ---
 
+## Post 6 — r/SideProject (373k) — FIRST SALE STORY
+
+**Title:** "My $5 Chrome extension just got its first paying customer. Total cost to build: $5."
+
+**Body:**
+```
+Three weeks ago I shipped Spoiler Shield — a Chrome extension that hides sports scores/spoilers on every website (built it because I watch football on delay and Google kept ruining matches for me).
+
+Yesterday the first Stripe email landed: $4.99, from a real stranger. Not a friend, not family. A person who tried it for 14 days and decided it was worth paying for.
+
+Numbers so far, fully transparent:
+- Cost to launch: $5 (Chrome Web Store fee). No hosting — it all runs client-side.
+- 13 users → 1 paid. Tiny numbers, but that's ~8% trial-to-paid.
+- Monetization: 14-day free trial → $4.99 one-time via ExtensionPay. No subscription.
+
+What I think made the difference: the trial doesn't nag, but when it ends the extension actually stops working — with a full-screen "your shield is down" page instead of a silent limp mode.
+
+Happy to answer anything about the build (Manifest V3 + vanilla JS) or the monetization setup.
+
+Link if you're curious: https://chromewebstore.google.com/detail/spoiler-shield/ndenomgckldachhdmfpgopjggoekgbgh
+```
+
+**Why this angle:** makers upvote honest first-revenue stories; the post sells without selling. Post AFTER v3.2.0 is live so new visitors hit the improved funnel.
+
+---
+
 ## Cross-post list (order, don't do all in one day)
 
 | Day | Subreddit | Post variant | Expected reach |
 |-----|-----------|--------------|----------------|
 | Day 1 (Thu) | r/soccer | Post 1 | 2.1M |
+| Day 2 (Fri) | r/SideProject | Post 6 — first sale story | 373k |
 | Day 3 (Sat) | r/PremierLeague | Post 2 | 1M |
 | Day 5 (Mon) | r/chrome_extensions | Post 5 | 30k |
 | Day 7 (Wed) | r/MLS | Post 3 | 200k |
