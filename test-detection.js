@@ -1,133 +1,165 @@
 /**
- * Comprehensive test for Spoiler Shield detection + masking pipeline.
+ * Spoiler Shield — detection + masking tests.
+ *
+ * Tests the ACTUAL patterns and decision logic shipped in content/blocker.js.
+ * The previous version of this file replicated a legacy pipeline built on
+ * data/keywords.json, which blocker.js no longer uses — so it tested nothing
+ * real. To prevent that drift from happening again, this harness extracts the
+ * relevant sections of blocker.js source and evaluates them in-process:
+ *
+ *   1. The pattern block (SCORE_G, SCORE_X_G, SCORE_VS_G, OUTCOME_G, MATCHUP,
+ *      SPORTS_FOOTBALL/SPORTS_PRO + buildSportsRegex)
+ *   2. isDateLike() — the date guard used by masking
+ *   3. shieldTextNode() — the text masking logic (run against a fake node)
+ *   4. The signal computation + isFull/isBlur decision inside shieldElement()
+ *
+ * If blocker.js is refactored and a marker disappears, the harness fails
+ * loudly instead of silently testing stale logic.
+ *
+ * Not covered here (DOM-dependent, needs a browser): container discovery,
+ * thumbnail blurring, the 3–2000 char length guards around shieldElement,
+ * scan scheduling, and YouTube SPA handling.
+ *
  * Run: node test-detection.js
+ * Exit 0 = all expectations met. KNOWN-ISSUE tests document real shortcomings
+ * of the shipped logic: they are expected to fail, don't affect the exit code,
+ * and flip to a hard failure if they unexpectedly start passing (so the
+ * markers stay honest).
  */
 
+'use strict';
+
 const fs = require('fs');
+const path = require('path');
 
-// Load keywords
-const keywords = JSON.parse(fs.readFileSync('./data/keywords.json', 'utf-8'));
+// ---------------------------------------------------------------------------
+// Extract the real detection code from content/blocker.js
+// ---------------------------------------------------------------------------
 
-// --- Replicate compileRegexes() from blocker.js ---
-const scoreRegexes = keywords.scorePatterns.map(p => new RegExp(p, 'gi'));
+const BLOCKER_PATH = path.join(__dirname, 'content', 'blocker.js');
+const src = fs.readFileSync(BLOCKER_PATH, 'utf-8');
 
-const matchIndicatorRegex = new RegExp(
-  keywords.matchIndicators.join('|'), 'i'
-);
-
-const spoilerWordRegex = new RegExp(
-  '(?:^|[\\s|,.:!?()\\[\\]–—-])(' +
-  keywords.spoilerWords.join('|') +
-  ')(?=$|[\\s|,.:!?()\\[\\]–—-])', 'gi'
-);
-
-const vsConnectorRegex = new RegExp(
-  keywords.vsConnectors.join('|'), 'i'
-);
-
-const competitionRegex = new RegExp(
-  keywords.competitions.join('|'), 'i'
-);
-
-// --- Structural patterns from blocker.js ---
-const VS_MATCH_FORMAT = /[A-Za-z\u0E00-\u0E7F]{2,}.*\b(?:vs?\.?|versus)\b.*[A-Za-z\u0E00-\u0E7F]{2,}/i;
-const ALLCAPS_PIPE = /^[A-Z][A-Z\s!]{3,}\s*\|/;
-const COMMA_SCORE = /[A-Z\u0E00-\u0E7F][A-Za-z\u0E00-\u0E7F]+\s+\d{1,3}\s*[,\-–—]\s*[A-Z\u0E00-\u0E7F][A-Za-z\u0E00-\u0E7F]+\s+\d{1,3}/;
-const BRACKET_MATCH = /\[\s*(?:post[- ]?match|match|pre[- ]?match|goal|score)\s*(?:thread|report|result|day)?\s*\]/i;
-const DATE_PATTERN = /\b\d{1,2}[\/-]\d{1,2}[\/-]\d{2,4}\b|\b\d{4}[\/-]\d{1,2}[\/-]\d{1,2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|june|july|august|september|october|november|december)\s+\d{1,2}(?:st|nd|rd|th)?,?\s*\d{2,4}\b/gi;
-
-// --- Replicate analyze() ---
-function analyze(text) {
-  if (!text) return { isSports: false, hasScore: false, hasSpoilerWord: false };
-
-  const textForScore = text.replace(DATE_PATTERN, ' ');
-  DATE_PATTERN.lastIndex = 0;
-  const hasScore = scoreRegexes.some(r => { r.lastIndex = 0; return r.test(textForScore); });
-
-  matchIndicatorRegex.lastIndex = 0;
-  const hasMatchIndicator = matchIndicatorRegex.test(text);
-
-  spoilerWordRegex.lastIndex = 0;
-  const hasSpoilerWord = spoilerWordRegex.test(text);
-  spoilerWordRegex.lastIndex = 0;
-
-  vsConnectorRegex.lastIndex = 0;
-  const hasVsConnector = vsConnectorRegex.test(text);
-
-  competitionRegex.lastIndex = 0;
-  const hasCompetition = competitionRegex.test(text);
-
-  const hasVsMatchFormat = VS_MATCH_FORMAT.test(text);
-  const hasAllCapsPipe = ALLCAPS_PIPE.test(text);
-  const hasCommaScore = COMMA_SCORE.test(text);
-  const hasBracketMatch = BRACKET_MATCH.test(text);
-
-  let isSports = false;
-
-  if (hasScore && (hasMatchIndicator || hasCompetition || hasSpoilerWord || hasVsConnector)) isSports = true;
-  if (hasCompetition && (hasVsConnector || hasMatchIndicator || hasSpoilerWord)) isSports = true;
-  if (hasMatchIndicator && (hasVsConnector || hasSpoilerWord)) isSports = true;
-  if (hasVsConnector && hasSpoilerWord) isSports = true;
-
-  if (hasVsMatchFormat && (hasScore || hasSpoilerWord || hasMatchIndicator || hasCompetition)) isSports = true;
-  if (hasVsConnector && hasCompetition) isSports = true;
-  if (hasAllCapsPipe && (hasScore || hasVsConnector || hasCompetition || hasSpoilerWord)) isSports = true;
-  if (hasCommaScore && (hasMatchIndicator || hasCompetition || hasSpoilerWord || hasVsConnector || hasScore)) isSports = true;
-  if (hasBracketMatch) isSports = true;
-
-  return {
-    isSports, hasScore, hasSpoilerWord,
-    _debug: { hasMatchIndicator, hasVsConnector, hasCompetition, hasVsMatchFormat, hasAllCapsPipe, hasCommaScore, hasBracketMatch }
-  };
-}
-
-// --- Replicate maskScores() ---
-function maskScores(text) {
-  let masked = text;
-  for (const regex of scoreRegexes) {
-    regex.lastIndex = 0;
-    masked = masked.replace(regex, (match) => match.replace(/\d+/g, '\u{1F6E1}\uFE0F'));
+function mustFind(marker, from = 0) {
+  const idx = src.indexOf(marker, from);
+  if (idx === -1) {
+    throw new Error(
+      `Extraction marker not found in content/blocker.js: ${JSON.stringify(marker)}\n` +
+      'blocker.js was probably refactored — update the markers in test-detection.js.'
+    );
   }
-  return masked;
+  return idx;
 }
 
-// --- Replicate maskSpoilerWords() ---
-function maskSpoilerWords(text) {
-  spoilerWordRegex.lastIndex = 0;
-  return text.replace(spoilerWordRegex, (match, word) => {
-    const prefix = match.substring(0, match.indexOf(word));
-    return prefix + '\u{1F6E1}\uFE0F';
-  });
-}
-
-// --- Full pipeline: analyze → conditionally mask ---
-function fullPipeline(text) {
-  const analysis = analyze(text);
-  let masked = text;
-  if (analysis.isSports) {
-    if (analysis.hasScore) masked = maskScores(masked);
-    if (analysis.hasSpoilerWord) masked = maskSpoilerWords(masked);
+// Extract `function name(...) {...}` by brace matching (regex literals in
+// blocker.js only contain balanced braces like {1,2}, so counting works).
+function extractFunction(name) {
+  const start = mustFind('function ' + name);
+  const open = src.indexOf('{', start);
+  let depth = 0;
+  for (let i = open; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}') {
+      depth--;
+      if (depth === 0) return src.slice(start, i + 1);
+    }
   }
-  return { analysis, masked };
+  throw new Error(`Unbalanced braces while extracting function ${name} from blocker.js`);
 }
 
-// ============================
-// TEST CASES
-// ============================
+// 1. Pattern definitions: SCORE_G ... let SPORTS = buildSportsRegex(tier);
+const patternsStart = mustFind('// --- Patterns ---');
+const patternsEndMarker = 'let SPORTS = buildSportsRegex(tier);';
+const patternsEnd = mustFind(patternsEndMarker) + patternsEndMarker.length;
+const patternsSrc = src.slice(patternsStart, patternsEnd);
+
+// 2. Pure helpers
+const isDateLikeSrc = extractFunction('isDateLike');
+const shieldTextNodeSrc = extractFunction('shieldTextNode');
+
+// 3. Signal computation + isFull/isBlur decision from inside shieldElement().
+//    Starts at the first lastIndex reset, ends after the isBlur declaration —
+//    everything in between is pure text logic (no DOM access).
+const shieldElementStart = mustFind('function shieldElement');
+const decisionStart = mustFind('SCORE_G.lastIndex = 0;', shieldElementStart);
+const isBlurStart = mustFind('const isBlur', decisionStart);
+const decisionEnd = mustFind(';', isBlurStart) + 1;
+const decisionSrc = src.slice(decisionStart, decisionEnd);
+
+const lib = new Function(`
+  ${patternsSrc}
+
+  ${isDateLikeSrc}
+
+  let originals = new Map();
+
+  ${shieldTextNodeSrc}
+
+  // shieldElement()'s signal + decision logic, lifted verbatim (DOM parts excluded)
+  function analyze(fullText) {
+    ${decisionSrc}
+    return { hasScore, hasOutcome, hasMatchup, hasContext, signals, strongSignals, isFull, isBlur };
+  }
+
+  // shieldTextNode() against a fake text node. inSportsContainer simulates the
+  // node living inside a confirmed [data-ss="1"] sports container, which
+  // enables the extra masking rules (team-digit pairs, hype words, emojis...).
+  function maskText(text, { inSportsContainer = false } = {}) {
+    originals = new Map();
+    const node = {
+      nodeValue: text,
+      parentElement: inSportsContainer ? { closest: () => true } : null,
+    };
+    shieldTextNode(node);
+    return node.nodeValue;
+  }
+
+  function setTier(t) { tier = t; SPORTS = buildSportsRegex(t); }
+
+  return { analyze, maskText, setTier, buildSportsRegex };
+`)();
+
+const { analyze, maskText, setTier, buildSportsRegex } = lib;
+
+// ---------------------------------------------------------------------------
+// Tiny test framework
+// ---------------------------------------------------------------------------
 
 let passed = 0;
 let failed = 0;
+let known = 0;
 
 function test(name, fn) {
   try {
     fn();
     passed++;
-    console.log(`  PASS  ${name}`);
+    console.log(`  PASS   ${name}`);
   } catch (e) {
     failed++;
-    console.log(`  FAIL  ${name}`);
-    console.log(`        ${e.message}`);
+    console.log(`  FAIL   ${name}`);
+    console.log(`         ${e.message}`);
   }
+}
+
+// Documents a real shortcoming of the shipped logic: the assertion states the
+// DESIRED behavior and is expected to fail today. If blocker.js is improved
+// and the assertion starts passing, the run fails so the marker gets removed.
+function knownIssue(name, why, fn) {
+  try {
+    fn();
+    failed++;
+    console.log(`  XPASS  ${name}`);
+    console.log(`         Marked as a known issue but now passes — blocker.js improved?`);
+    console.log(`         Convert this knownIssue() into a regular test().`);
+  } catch (e) {
+    known++;
+    console.log(`  KNOWN  ${name}`);
+    console.log(`         ${why}`);
+    console.log(`         Actual: ${e.message}`);
+  }
+}
+
+function assert(cond, msg) {
+  if (!cond) throw new Error(msg);
 }
 
 function assertEqual(actual, expected, label) {
@@ -136,124 +168,258 @@ function assertEqual(actual, expected, label) {
   }
 }
 
-console.log('');
-console.log('=== SHOULD DETECT AS SPORTS ===');
-console.log('');
+function debugStr(a) {
+  return `score=${a.hasScore} outcome=${a.hasOutcome} matchup=${a.hasMatchup} ` +
+         `context=${a.hasContext} → full=${a.isFull} blur=${a.isBlur}`;
+}
 
-// Test 1
-test('Man Utd v Palace - Winner detected', () => {
-  const title = 'ANOTHER \u0160e\u0161ko Winner! \uD83D\uDE0D | Man Utd v Palace | Highlights';
-  const { analysis, masked } = fullPipeline(title);
-  assertEqual(analysis.isSports, true, 'isSports');
-  assertEqual(analysis.hasSpoilerWord, true, 'hasSpoilerWord');
-  // "Winner" should become shield
-  if (!masked.includes('\u{1F6E1}\uFE0F')) throw new Error(`No shield in masked output: "${masked}"`);
-  if (masked.includes('Winner')) throw new Error(`"Winner" was NOT masked: "${masked}"`);
-  console.log(`        Masked: "${masked}"`);
+function assertDetected(title, { full } = {}) {
+  const a = analyze(title);
+  assert(a.isFull || a.isBlur, `expected detection, got: ${debugStr(a)}`);
+  if (full === true) assert(a.isFull, `expected FULL, got: ${debugStr(a)}`);
+  if (full === false) assert(!a.isFull && a.isBlur, `expected BLUR only, got: ${debugStr(a)}`);
+  return a;
+}
+
+function assertNotDetected(title) {
+  const a = analyze(title);
+  assert(!a.isFull && !a.isBlur, `expected no detection, got: ${debugStr(a)}`);
+  return a;
+}
+
+// ---------------------------------------------------------------------------
+// SHOULD DETECT — full masking tier
+// ---------------------------------------------------------------------------
+
+console.log('\n=== SHOULD DETECT (full: text masked + blur) ===\n');
+
+test('Outcome word + matchup: "ANOTHER Šeško Winner! 😍 | Man Utd v Palace | Highlights"', () => {
+  const title = 'ANOTHER Šeško Winner! 😍 | Man Utd v Palace | Highlights';
+  assertDetected(title, { full: true });
+  const masked = maskText(title);
+  assert(!masked.includes('Winner'), `"Winner" not masked: "${masked}"`);
+  assert(masked.includes('🛡️'), `no shield in output: "${masked}"`);
 });
 
-// Test 2
-test('Newcastle v Man Utd - Defeat detected', () => {
+test('Outcome word + matchup: "Defeat Away From Home | Newcastle v Man Utd"', () => {
   const title = 'Defeat Away From Home | Newcastle v Man Utd';
-  const { analysis, masked } = fullPipeline(title);
-  assertEqual(analysis.isSports, true, 'isSports');
-  assertEqual(analysis.hasSpoilerWord, true, 'hasSpoilerWord');
-  if (masked.includes('Defeat')) throw new Error(`"Defeat" was NOT masked: "${masked}"`);
-  console.log(`        Masked: "${masked}"`);
+  assertDetected(title, { full: true });
+  const masked = maskText(title);
+  assert(!masked.includes('Defeat'), `"Defeat" not masked: "${masked}"`);
 });
 
-// Test 3
-test('Everton 0-1 Man Utd - score masked', () => {
-  const title = 'A Classic Counterattack! \uD83D\uDE0D Everton 0-1 Man Utd | Extended Highlights';
-  const { analysis, masked } = fullPipeline(title);
-  assertEqual(analysis.isSports, true, 'isSports');
-  assertEqual(analysis.hasScore, true, 'hasScore');
-  // "0-1" should become "🛡️-🛡️"
-  if (masked.includes('0-1')) throw new Error(`Score "0-1" was NOT masked: "${masked}"`);
-  if (!masked.includes('\u{1F6E1}\uFE0F-\u{1F6E1}\uFE0F')) throw new Error(`Expected shield-shield pattern not found: "${masked}"`);
-  console.log(`        Masked: "${masked}"`);
+test('Score between team names: "A Classic Counterattack! 😍 Everton 0-1 Man Utd | Extended Highlights"', () => {
+  const title = 'A Classic Counterattack! 😍 Everton 0-1 Man Utd | Extended Highlights';
+  const a = assertDetected(title, { full: true });
+  assert(a.hasScore, `expected hasScore: ${debugStr(a)}`);
+  assert(a.hasMatchup, `expected implicit matchup (Team 0-1 Team): ${debugStr(a)}`);
+  const masked = maskText(title);
+  assert(!masked.includes('0-1'), `score not masked: "${masked}"`);
+  assert(masked.includes('🛡️-🛡️'), `expected 🛡️-🛡️: "${masked}"`);
 });
 
-// Test 4
-test('Thai football highlights detected', () => {
-  const title = '\u0E44\u0E2E\u0E44\u0E25\u0E17\u0E4C\u0E1F\u0E38\u0E15\u0E1A\u0E2D\u0E25 Black Hunter High School 2026 \u0E2A\u0E31\u0E1B\u0E14\u0E32\u0E2B\u0E4C\u0E17\u0E35\u0E48 1 : \u0E2B\u0E21\u0E2D\u0E19\u0E17\u0E2D\u0E07\u0E27\u0E34\u0E17\u0E22\u0E32 \u0E1E\u0E1A \u0E2D\u0E1A\u0E08.\u0E0A\u0E31\u0E22\u0E19\u0E32\u0E17';
-  const { analysis } = fullPipeline(title);
-  assertEqual(analysis.isSports, true, 'isSports');
-  console.log(`        Debug: ${JSON.stringify(analysis._debug)}`);
+test('Thai: "ไฮไลท์ฟุตบอล ... หมอนทองวิทยา พบ อบจ.ชัยนาท" (context + พบ matchup)', () => {
+  const title = 'ไฮไลท์ฟุตบอล Black Hunter High School 2026 สัปดาห์ที่ 1 : หมอนทองวิทยา พบ อบจ.ชัยนาท';
+  const a = assertDetected(title, { full: true });
+  assert(a.hasContext, `expected Thai sports context (ไฮไลท์/ฟุตบอล): ${debugStr(a)}`);
+  assert(a.hasMatchup, `expected matchup via "พบ": ${debugStr(a)}`);
 });
 
-// Test 5
-test('Liverpool beat Chelsea 3-0 - spoiler word + score masked', () => {
+test('Score + outcome + competition: "Liverpool beat Chelsea 3-0 in Premier League"', () => {
   const title = 'Liverpool beat Chelsea 3-0 in Premier League';
-  const { analysis, masked } = fullPipeline(title);
-  assertEqual(analysis.isSports, true, 'isSports');
-  assertEqual(analysis.hasScore, true, 'hasScore');
-  assertEqual(analysis.hasSpoilerWord, true, 'hasSpoilerWord');
-  if (masked.includes('beat')) throw new Error(`"beat" was NOT masked: "${masked}"`);
-  if (masked.includes('3-0')) throw new Error(`Score "3-0" was NOT masked: "${masked}"`);
-  console.log(`        Masked: "${masked}"`);
+  const a = assertDetected(title, { full: true });
+  assert(a.hasScore && a.hasOutcome && a.hasContext, `expected all signals: ${debugStr(a)}`);
+  const masked = maskText(title);
+  assert(!masked.includes('beat'), `"beat" not masked: "${masked}"`);
+  assert(!masked.includes('3-0'), `score not masked: "${masked}"`);
 });
 
-// Test 6
-test('PSG thrashed Bayern Munich - spoiler word masked', () => {
-  const title = 'PSG thrashed Bayern Munich';
-  const { analysis, masked } = fullPipeline(title);
-  assertEqual(analysis.isSports, true, 'isSports');
-  assertEqual(analysis.hasSpoilerWord, true, 'hasSpoilerWord');
-  if (masked.includes('thrashed')) throw new Error(`"thrashed" was NOT masked: "${masked}"`);
-  console.log(`        Masked: "${masked}"`);
+test('Spanish: "Resumen: Real Madrid 2-1 Barcelona | La Liga"', () => {
+  const title = 'Resumen: Real Madrid 2-1 Barcelona | La Liga';
+  assertDetected(title, { full: true });
+  const masked = maskText(title);
+  assert(!masked.includes('2-1'), `score not masked: "${masked}"`);
 });
 
-console.log('');
-console.log('=== SHOULD NOT DETECT AS SPORTS ===');
-console.log('');
-
-// Test 7
-test('Coach training drill with 2 vs 2 - NOT sports result', () => {
-  const title = 'Coach Kompany pushes squad in 2 vs 2 drills | FC Bayern Training';
-  const { analysis } = fullPipeline(title);
-  assertEqual(analysis.isSports, false, 'isSports');
-  console.log(`        Debug: ${JSON.stringify(analysis._debug)}`);
+test('Japanese: "ハイライト：レアル・マドリード 対 バルセロナ" (context + 対 matchup)', () => {
+  assertDetected('ハイライト：レアル・マドリード 対 バルセロナ', { full: true });
 });
 
-// Test 8
-test('Barcelona Academy coaching video - NOT sports result', () => {
-  const title = 'The Art of Body Feint by Coach Ahmadreza | 11-Year-Old Barcelona Academy Player';
-  const { analysis } = fullPipeline(title);
-  assertEqual(analysis.isSports, false, 'isSports');
-  console.log(`        Debug: ${JSON.stringify(analysis._debug)}`);
+test('German: "Bayern Sieg gegen Dortmund | Bundesliga" (outcome + context)', () => {
+  const title = 'Bayern Sieg gegen Dortmund | Bundesliga';
+  const a = assertDetected(title, { full: true });
+  assert(a.hasOutcome, `expected "Sieg" as outcome: ${debugStr(a)}`);
+  const masked = maskText(title);
+  assert(!masked.includes('Sieg'), `"Sieg" not masked: "${masked}"`);
 });
 
-// Test 9
-test('Playing With Time - NOT sports', () => {
-  const title = 'Playing With Time';
-  const { analysis } = fullPipeline(title);
-  assertEqual(analysis.isSports, false, 'isSports');
+test('Pro sports (trial tier): "Lakers vs Celtics | NBA Finals Highlights"', () => {
+  assertDetected('Lakers vs Celtics | NBA Finals Highlights', { full: true });
 });
 
-// Test 10
-test('My Morning Routine 5:30 AM - NOT sports', () => {
-  const title = 'My Morning Routine 5:30 AM';
-  const { analysis } = fullPipeline(title);
-  assertEqual(analysis.isSports, false, 'isSports');
-  console.log(`        Debug: ${JSON.stringify(analysis._debug)}`);
+knownIssue(
+  'Outcome word only, no matchup/context: "PSG thrashed Bayern Munich"',
+  'False NEGATIVE: a single outcome word with no second signal is skipped by design ' +
+  '(strongSignals=1, no context), so this real spoiler slips through.',
+  () => {
+    assertDetected('PSG thrashed Bayern Munich');
+  }
+);
+
+// ---------------------------------------------------------------------------
+// SHOULD DETECT — blur-only tier
+// ---------------------------------------------------------------------------
+
+console.log('\n=== SHOULD DETECT (blur only: thumbnail hidden, text kept) ===\n');
+
+test('Matchup alone: "Arsenal vs Chelsea" → blur, not full', () => {
+  assertDetected('Arsenal vs Chelsea', { full: false });
 });
 
-// Test 11
-test('Event on 3-2-26 (date) - NOT sports', () => {
-  const title = 'Event on 3-2-26';
-  const { analysis } = fullPipeline(title);
-  assertEqual(analysis.isSports, false, 'isSports');
-  console.log(`        Debug: ${JSON.stringify(analysis._debug)}`);
+test('Context alone: "Premier League action tonight" → blur, not full', () => {
+  assertDetected('Premier League action tonight', { full: false });
 });
 
-// ============================
-// SUMMARY
-// ============================
-console.log('');
-console.log('========================================');
-console.log(`  TOTAL: ${passed + failed}  |  PASSED: ${passed}  |  FAILED: ${failed}`);
-console.log('========================================');
-console.log('');
+test('Tier gating: NBA matchup is full on trial, blur-only on free (football-only patterns)', () => {
+  // No "Highlights" here — that word is a football-tier context pattern.
+  const title = 'Lakers vs Celtics | NBA Finals';
+  try {
+    setTier('free');
+    const a = analyze(title);
+    assert(!a.hasContext, `free tier should not match NBA context: ${debugStr(a)}`);
+    assertEqual(a.isFull, false, 'isFull on free tier');
+    assertEqual(a.isBlur, true, 'isBlur on free tier (matchup alone)');
+  } finally {
+    setTier('trial');
+  }
+  assertDetected(title, { full: true });
+  assert(buildSportsRegex('trial').test('NBA Finals'), 'trial regex should match NBA');
+  assert(!buildSportsRegex('free').test('NBA Finals'), 'free regex should not match NBA');
+  assert(buildSportsRegex('free').test('Premier League'), 'free regex should match football');
+});
 
-process.exit(failed > 0 ? 1 : 0);
+// ---------------------------------------------------------------------------
+// SHOULD NOT DETECT
+// ---------------------------------------------------------------------------
+
+console.log('\n=== SHOULD NOT DETECT ===\n');
+
+test('Coaching video: "The Art of Body Feint by Coach Ahmadreza | 11-Year-Old Barcelona Academy Player"', () => {
+  assertNotDetected('The Art of Body Feint by Coach Ahmadreza | 11-Year-Old Barcelona Academy Player');
+});
+
+test('Generic title: "Playing With Time"', () => {
+  assertNotDetected('Playing With Time');
+});
+
+test('Outcome word in non-sports context: "How to win at chess"', () => {
+  assertNotDetected('How to win at chess');
+});
+
+test('Bare score, no surrounding words: "10-4 good buddy"', () => {
+  assertNotDetected('10-4 good buddy');
+});
+
+test('Date: "Event on 3-2-26"', () => {
+  assertNotDetected('Event on 3-2-26');
+});
+
+knownIssue(
+  'Training drill: "Coach Kompany pushes squad in 2 vs 2 drills | FC Bayern Training"',
+  'False POSITIVE: "2 vs 2" matches SCORE_VS_G as a score AND the bare "vs" ' +
+  'satisfies MATCHUP → 2 strong signals → full detection of a non-result video.',
+  () => {
+    assertNotDetected('Coach Kompany pushes squad in 2 vs 2 drills | FC Bayern Training');
+  }
+);
+
+knownIssue(
+  'Clock time: "My Morning Routine 5:30 AM"',
+  'False POSITIVE at detection level: "5:30" matches SCORE_G, "Routine 5:30 AM" ' +
+  'matches the implicit word-score-word matchup, and OUTCOME_G\'s rout\\w* even ' +
+  'matches "Routine" → full detection. The duration guard (sep ":" + 2-digit ' +
+  'right side) only protects masking, not detection.',
+  () => {
+    assertNotDetected('My Morning Routine 5:30 AM');
+  }
+);
+
+// ---------------------------------------------------------------------------
+// MASKING GUARDS (shieldTextNode)
+// ---------------------------------------------------------------------------
+
+console.log('\n=== MASKING ===\n');
+
+test('Duration guard: "5:30" and "2:11" are never masked (2-digit seconds)', () => {
+  assertEqual(maskText('Wake up at 5:30 AM every day'), 'Wake up at 5:30 AM every day', 'masked');
+  assertEqual(maskText('Watch until 2:11 for it'), 'Watch until 2:11 for it', 'masked');
+});
+
+knownIssue(
+  'OUTCOME_G wildcard rout\\w* masks innocent words like "Routine"',
+  'The rout\\w* pattern (meant for "routed"/"routing" as in a rout) also matches ' +
+  '"Routine", so any detected element containing that word gets it shielded.',
+  () => {
+    assertEqual(maskText('My Morning Routine 5:30 AM'), 'My Morning Routine 5:30 AM', 'masked');
+  }
+);
+
+test('Date guard: "Event on 3-2-26" untouched even inside a sports container', () => {
+  assertEqual(
+    maskText('Event on 3-2-26', { inSportsContainer: true }),
+    'Event on 3-2-26',
+    'masked'
+  );
+});
+
+test('Big-number guard: "Patriots 20-13 Jets" text kept (scores >15 skipped)', () => {
+  // Detection still fires (real sports title) — protection is blur, not text masking.
+  assertDetected('Patriots 20-13 Jets', { full: true });
+  assertEqual(maskText('Patriots 20-13 Jets'), 'Patriots 20-13 Jets', 'masked');
+});
+
+test('"x" score format: "Brasil 3 x 1 Argentina" → "🛡️ x 🛡️"', () => {
+  assertDetected('Brasil 3 x 1 Argentina', { full: true });
+  const masked = maskText('Brasil 3 x 1 Argentina');
+  assert(masked.includes('🛡️ x 🛡️'), `expected shielded x-score: "${masked}"`);
+});
+
+test('Thai outcome + score: "ลิเวอร์พูล ชนะ เชลซี 2-0" fully masked', () => {
+  const masked = maskText('ลิเวอร์พูล ชนะ เชลซี 2-0');
+  assert(!masked.includes('ชนะ'), `"ชนะ" not masked: "${masked}"`);
+  assert(!masked.includes('2-0'), `score not masked: "${masked}"`);
+});
+
+test('Container-only rule: "Chelsea 0 Newcastle United 1" masked inside container only', () => {
+  const title = 'Chelsea 0 Newcastle United 1';
+  assertEqual(maskText(title), title, 'outside container');
+  assertEqual(
+    maskText(title, { inSportsContainer: true }),
+    'Chelsea 🛡️ Newcastle United 🛡️',
+    'inside container'
+  );
+});
+
+test('Container-only rule: hype words + sentiment emoji stripped inside container only', () => {
+  const title = 'ANOTHER Šeško Winner! 😍';
+  const outside = maskText(title);
+  assert(outside.includes('ANOTHER'), `"ANOTHER" should survive outside container: "${outside}"`);
+  assert(!outside.includes('Winner'), `"Winner" should always be masked: "${outside}"`);
+  const inside = maskText(title, { inSportsContainer: true });
+  assert(!inside.includes('ANOTHER'), `"ANOTHER" not masked in container: "${inside}"`);
+  assert(!inside.includes('😍'), `emoji not stripped in container: "${inside}"`);
+});
+
+// ---------------------------------------------------------------------------
+// Summary
+// ---------------------------------------------------------------------------
+
+console.log('\n========================================');
+console.log(`  TOTAL: ${passed + failed + known}  |  PASSED: ${passed}  |  FAILED: ${failed}  |  KNOWN ISSUES: ${known}`);
+console.log('========================================\n');
+
+if (failed > 0) {
+  console.log('Unexpected failures — see above.\n');
+  process.exit(1);
+}
+process.exit(0);
