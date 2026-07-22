@@ -32,7 +32,7 @@
     '\\b(?:draws?|drew|ties?|tied)\\b',
     '\\b(?:defeats?|defeated)\\b',
     '\\b(?:thrash\\w*|destroy\\w*|demolish\\w*|crush\\w*|humiliat\\w*)\\b',
-    '\\b(?:rout\\w*|hammer\\w*|smash\\w*|wallop\\w*)\\b',
+    '\\b(?:routs?|routed|hammer\\w*|smash\\w*|wallop\\w*)\\b',
     '\\b(?:stun(?:ned|s|ning)?|upsets?|comeback)\\b',
     '\\b(?:dominat\\w*|outclass\\w*|outplay\\w*)\\b',
     '\\b(?:knock(?:ed)?\\s*out|eliminat\\w*|relegat\\w*)\\b',
@@ -83,6 +83,11 @@
     '\\d+\\s*แอสซิสต์', '\\d+\\s*ประตู', '\\d+\\s*ลูก',
     '\\d+แต้ม'
   ].join('|'), 'gi');
+
+  // Decisive result verbs — near-certain spoilers even with no second signal.
+  // Deliberately narrow subset of OUTCOME_G: generic words (win, beat, lost)
+  // still need a second signal so "How to win at chess" stays untouched.
+  const OUTCOME_DECISIVE_G = /\b(?:thrash\w*|demolish\w*|humiliat\w*|wallop\w*|routs?|routed|goleada|Kantersieg)\b/gi;
 
   // Matchup: "TeamA vs TeamB" — words on both sides of a versus-like connector
   // Matches: "Barcelona VS Real Madrid", "Liverpool v Arsenal", "แมนยู พบ ลิเวอร์พูล"
@@ -269,6 +274,26 @@
     return false;
   }
 
+  // A score match that survives the semantic guards: dates ("3-2-26") and
+  // clock times ("5:30") are not scores. Big numbers are NOT excluded here —
+  // "Patriots 20-13 Jets" must still be detected even though masking skips it.
+  function hasRealScore(text) {
+    for (const re of [SCORE_G, SCORE_X_G, SCORE_VS_G]) {
+      re.lastIndex = 0;
+      let m;
+      while ((m = re.exec(text))) {
+        const [full, , sep, b] = m;
+        if (isDateLike(text, full, m.index)) continue;
+        // "2:11" = duration (seconds are 2 digits), "2:0" / "3:1" = score
+        if (sep === ':' && b.length >= 2) continue;
+        re.lastIndex = 0;
+        return true;
+      }
+      re.lastIndex = 0;
+    }
+    return false;
+  }
+
   function shieldTextNode(textNode) {
     const orig = textNode.nodeValue;
     if (!orig || orig.trim().length < 2) return false;
@@ -348,22 +373,42 @@
     if (fullText.length < 3 || fullText.length > 2000) return false;
 
     // Signals: score, outcome, matchup ("A vs B"), sports context
-    SCORE_G.lastIndex = 0;
-    SCORE_X_G.lastIndex = 0;
-    SCORE_VS_G.lastIndex = 0;
-    const hasScore = SCORE_G.test(fullText) || SCORE_X_G.test(fullText) || SCORE_VS_G.test(fullText);
-    SCORE_G.lastIndex = 0;
-    SCORE_X_G.lastIndex = 0;
-    SCORE_VS_G.lastIndex = 0;
+    const hasScore = hasRealScore(fullText);
     OUTCOME_G.lastIndex = 0;
     const hasOutcome = OUTCOME_G.test(fullText);
     OUTCOME_G.lastIndex = 0;
-    let hasMatchup = MATCHUP.test(fullText);
+    OUTCOME_DECISIVE_G.lastIndex = 0;
+    const hasDecisive = OUTCOME_DECISIVE_G.test(fullText);
+    OUTCOME_DECISIVE_G.lastIndex = 0;
+    // "2 vs 2" is a single token (a drill/format, not a matchup) — strip
+    // digit-vs-digit before the matchup test so its "vs" can't double-count
+    // as both a score and a matchup connector.
+    SCORE_VS_G.lastIndex = 0;
+    let hasMatchup = MATCHUP.test(fullText.replace(SCORE_VS_G, ' '));
+    SCORE_VS_G.lastIndex = 0;
     const hasContext = SPORTS.test(fullText);
 
-    // "Team1 4-2 Team2" → score between words = implicit matchup
+    // "Team1 4-2 Team2" → score between words = implicit matchup.
+    // ":" followed by 2 digits is a clock time, and a digit-vs-digit score
+    // only counts when flanked by capitalized names ("Arsenal 3 vs 1 Chelsea").
     if (hasScore && !hasMatchup) {
-      hasMatchup = /[A-Za-z\u0E00-\u0E7F]\S*\s+\d{1,2}\s*[-–—:x]\s*\d{1,2}\s+\S*[A-Za-z\u0E00-\u0E7F]/i.test(fullText);
+      hasMatchup = /[A-Za-z\u0E00-\u0E7F]\S*\s+\d{1,2}\s*(?:[-–—x]\s*\d{1,2}|:\s*\d(?!\d))\s+\S*[A-Za-z\u0E00-\u0E7F]/i.test(fullText) ||
+        /[A-Z]\S*\s+\d{1,2}\s*vs?\.?\s*\d{1,2}\s+[A-Z]/.test(fullText);
+    }
+
+    // "PSG thrashed Bayern Munich" → decisive verb between two capitalized
+    // names = implicit matchup (mirrors the score-between-teams rule)
+    if (hasDecisive && !hasMatchup) {
+      OUTCOME_DECISIVE_G.lastIndex = 0;
+      let dm;
+      while ((dm = OUTCOME_DECISIVE_G.exec(fullText))) {
+        if (/(?:^|\s)[A-Z]\S*\s+$/.test(fullText.slice(0, dm.index)) &&
+            /^\s+[A-Z]/.test(fullText.slice(dm.index + dm[0].length))) {
+          hasMatchup = true;
+          break;
+        }
+      }
+      OUTCOME_DECISIVE_G.lastIndex = 0;
     }
 
     const signals = (hasScore ? 1 : 0) + (hasOutcome ? 1 : 0) + (hasMatchup ? 1 : 0) + (hasContext ? 1 : 0);
@@ -375,9 +420,10 @@
     // - hasContext + any other signal → FULL
     // - hasMatchup alone → BLUR (matchup like "TeamA vs TeamB" is strong sports indicator)
     // - hasContext alone → BLUR (thumbnail only, score might be in image)
-    // - 1 non-matchup strong signal, no context (e.g., random "2-1") → SKIP
+    // - decisive outcome word alone ("Humiliated!") → BLUR (leaking beats over-blurring)
+    // - 1 other strong signal, no context (e.g., random "2-1") → SKIP
     const isFull = (strongSignals >= 2) || (hasContext && signals >= 2);
-    const isBlur = (hasContext && signals === 1) || (hasMatchup && signals === 1);
+    const isBlur = (hasContext && signals === 1) || (hasMatchup && signals === 1) || (hasDecisive && signals === 1);
 
     if (!isFull && !isBlur) return false;
 
